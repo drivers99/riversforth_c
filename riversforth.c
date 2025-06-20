@@ -179,22 +179,24 @@ void do_mul(void) {
     sp[0] *= a; // ignores overflow
 }
 
+void do_div(void) {
+    Cell a = pop();
+    sp[0] /= a;
+}
+
+void do_mod(void) {
+    Cell a = pop();
+    sp[0] %= a;
+}
+
+void do_divmod(void) {
+    Cell a = pop();
+    Cell b = pop();
+    push(b % a); // push remainder
+    push(b / a); // push quotient
+}
+
 /*
-
-// 
-// 	In this FORTH, only /MOD is primitive.  Later we will define the / and MOD words in
-// 	terms of the primitive /MOD.  The design of the i386 assembly instruction idiv which
-// 	leaves both quotient and remainder makes this the obvious choice.
-// 
-
-	defcode "/MOD",4,,DIVMOD
-	xor %edx,%edx
-	pop %ebx
-	pop %eax
-	idivl %ebx
-	push %edx		// push remainder
-	push %eax		// push quotient
-	NEXT
 
 // 
 // 	Lots of comparison operations like =, <, >, etc..
@@ -353,6 +355,9 @@ Word word_decr8   = { NULL, "8-",    do_decr8,   NULL };
 Word word_add     = { NULL, "+",     do_add,     NULL };
 Word word_sub     = { NULL, "-",     do_sub,     NULL };
 Word word_mul     = { NULL, "*",     do_mul,     NULL };
+Word word_div     = { NULL, "/",     do_div,     NULL };
+Word word_mod     = { NULL, "%",     do_mod,     NULL };
+Word word_divmod  = { NULL, "/MOD",  do_divmod,  NULL };
 
 Word word_dot     = { NULL, ".",     do_dot,     NULL };
 Word word_exit    = { NULL, "EXIT",  do_exit,    NULL };
@@ -597,6 +602,46 @@ int main(void)
     assert(pop() == -40);
     assert(save == sp);
 #endif
+
+    add_word(&word_div);
+#if DEBUG
+    interpret("20 5 /");
+    assert(pop() == 4);
+    assert(save == sp);
+
+    interpret("21 5 /");
+    assert(pop() == 4);
+    assert(save == sp);
+#endif
+
+    add_word(&word_mod);
+#if DEBUG
+    interpret("20 5 %");
+    assert(pop() == 0);
+    assert(save == sp);
+
+    interpret("21 5 %");
+    assert(pop() == 1);
+    assert(save == sp);
+
+    // TODO how SHOULD this work if either number is negative?
+#endif
+
+    add_word(&word_divmod);
+#if DEBUG
+    interpret("20 5 /MOD");
+    assert(pop() == 4);
+    assert(pop() == 0);
+    assert(save == sp);
+
+    interpret("21 5 /MOD");
+    assert(pop() == 4);
+    assert(pop() == 1);
+    assert(save == sp);
+
+    // TODO how SHOULD this work if either number is negative?
+#endif
+
 
     add_word(&word_exit);
     add_word(&word_double);
