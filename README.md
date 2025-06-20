@@ -12,7 +12,7 @@ I'm also planning to refer to other resources such as:
 
 ## Are we Forth yet?
 
-Built in primitives are in a linked list using C structs but not using the space inside the user data / dictionary.
+Checklist of words to be implemented.
 
 ### Easy FORTH primitives
 
@@ -25,7 +25,7 @@ Built in primitives are in a linked list using C structs but not using the space
 - [x] 2DROP
 - [x] 2DUP
 - [x] 2SWAP
-- [ ] ?DUP
+- [x] ?DUP
 - [ ] 1+
 - [ ] 1-
 - [ ] 4+

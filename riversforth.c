@@ -135,14 +135,15 @@ void do_twoswap(void) {
     push(c);
 }
 
-/*
+void do_qdup(void) {
+    // duplicate top of stack if non-zero
+    Cell a = sp[0];
+    if (a) {
+        push(a);        
+    }
+}
 
-	defcode "?DUP",4,,QDUP	// duplicate top of stack if non-zero
-	movl (%esp),%eax
-	test %eax,%eax
-	jz 1f
-	push %eax
-1:	NEXT
+/*
 
 	defcode "1+",2,,INCR
 	incl (%esp)		// increment top of stack
@@ -347,6 +348,7 @@ Word word_nrot    = { NULL, "-ROT",  do_nrot,    NULL };
 Word word_twodrop = { NULL, "2DROP", do_twodrop, NULL };
 Word word_twodup  = { NULL, "2DUP" , do_twodup,  NULL };
 Word word_twoswap = { NULL, "2SWAP", do_twoswap, NULL };
+Word word_qdup    = { NULL, "?DUP",  do_qdup,    NULL };
 
 Word word_dot     = { NULL, ".",     do_dot,     NULL };
 Word word_plus    = { NULL, "+",     do_plus,    NULL };
@@ -528,6 +530,18 @@ int main(void)
     assert(pop() == 5);
     assert(pop() == 8);
     assert(pop() == 7);
+    assert(save == sp);
+#endif
+
+    add_word(&word_qdup);
+#if DEBUG
+    interpret("0 ?DUP");
+    assert(pop() == 0);
+    assert(save == sp);
+
+    interpret("1 ?DUP");
+    assert(pop() == 1);
+    assert(pop() == 1);
     assert(save == sp);
 #endif
 
