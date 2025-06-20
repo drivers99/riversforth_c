@@ -37,7 +37,7 @@ Cell *sp = data_stack + DATA_STACK_SIZE; // grows down. C pointer arithmetic add
 Cell return_stack[RETURN_STACK_SIZE];
 Cell *rp = return_stack + RETURN_STACK_SIZE; // I'm thinking return_stack is also made of Cells
 
-Cell *ip = NULL; // address of next "instruction", TODO make sure of data type depending on dictionary
+Cell *ip = NULL; // address of next "instruction"
 
 void push(Cell x) { *--sp = x; } // TODO add bounds checking
 Cell pop(void) { return *sp++; } // TODO add bounds checking
@@ -45,7 +45,7 @@ Cell pop(void) { return *sp++; } // TODO add bounds checking
 Cell dictionary[DICTIONARY_SIZE];
 Cell *here = 0;
 Word *last = NULL; // head of dictionary linked list
-Word *current_word = NULL; // latest and current word really are Word pointers though
+Word *current_word = NULL; // last and current word really are Word pointers though
 
 void do_dot(void) {
     printf("%ld ", pop());
@@ -438,11 +438,7 @@ void interpret(char *line) {
 
 int main(void)
 {
-    // interesting that the words can be added in another order
-    // we probably shouldn't do that
-    // going to arrange it in an order that could happen
-    
-    // moving this to the top so we can use it to troubleshoot
+    // DOT at the top so we can use it in unit tests
     // but I think it will also get converted to native Forth once we get to that point
     add_word(&word_dot); 
     // no test for dot
