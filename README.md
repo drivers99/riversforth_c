@@ -4,9 +4,11 @@ writing a forth in C
 jonesforth.S and jonesforth.f are for reference since I'm using them for how things should work and what order to implement things.
 
 I'm also planning to refer to other resources such as:
-- Threaded Interpreted Languages
+- Threaded Interpretive Languages
 - Forth Encyclopedia
 - 2014 Forth Standard (electronic version)
+- Starting Forth
+- Thinking Forth
 
 ## Are we Forth yet?
 
