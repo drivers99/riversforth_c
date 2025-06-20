@@ -3,6 +3,9 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
+#include <assert.h>
+
+#define DEBUG 1
 
 typedef intptr_t Cell; // 64 bits or 8 bytes
 typedef void (*CodeFn)(void);
@@ -80,21 +83,22 @@ void do_over(void) {
     push(sp[1]);
 }
 
+void do_rot(void) {
+    // we could pop a, b, c
+    // push b, a, c
+    // in other words ( c b a -- b a c )
+    // or reassign elements directly with one temp
+    // or do some crazy xor logic just to avoid using a temp
+    Cell a = pop();
+    Cell b = pop();
+    Cell c = pop();
+    push(b);
+    push(a);
+    push(c);
+    // having to remember semicolons and declaring variable types is
+    // easy to forget when you're used to writing in Python
+}
 /*
-
-	defcode "OVER",4,,OVER
-	mov 4(%esp),%eax	// get the second element of stack
-	push %eax		// and push it on top
-	NEXT
-
-	defcode "ROT",3,,ROT
-	pop %eax
-	pop %ebx
-	pop %ecx
-	push %ebx
-	push %eax
-	push %ecx
-	NEXT
 
 	defcode "-ROT",4,,NROT
 	pop %eax
@@ -420,7 +424,6 @@ void interpret(char *line) {
             }
         }
     }
-    printf("\n");
 }
 
 int main(void)
@@ -429,16 +432,76 @@ int main(void)
     // we probably shouldn't do that
     // going to arrange it in an order that could happen
     add_word(&word_drop);
+#if DEBUG
+    Cell *save = sp;
+    interpret("1 2 drop");
+    assert(sp[0] == 1);
+    interpret("drop");
+    assert(save == sp);
+#endif
+
     add_word(&word_swap);
+#if DEBUG
+    interpret("2 1 swap drop");
+    assert(sp[0] == 1);
+    interpret("drop");
+    assert(save == sp);
+#endif
+
     add_word(&word_dup);
+#if DEBUG
+    interpret("42 dup");
+    assert(sp[0] == 42);
+    interpret("drop");
+    assert(sp[0] == 42);
+    interpret("drop");
+    assert(save == sp);
+#endif
+
     add_word(&word_over);
+#if DEBUG
+    interpret("10 11 over");
+    assert(sp[0] == 10);
+    interpret("drop");
+    assert(sp[0] == 11);
+    interpret("drop");
+    assert(sp[0] == 10);
+    interpret("drop");
+    assert(save == sp);
+#endif
 
     add_word(&word_plus);
-    add_word(&word_dot);
-    add_word(&word_exit);
+#if DEBUG
+    interpret("11 22 +");
+    assert(sp[0] == 33);
+    interpret("drop");
+    assert(save == sp);
 
+    interpret("5 -8 +");
+    assert(sp[0] == -3);
+    interpret("drop");
+    assert(save == sp);
+#endif
+
+    add_word(&word_dot);
+    // no test for dot
+
+    add_word(&word_exit);
     add_word(&word_double);
     add_word(&word_quadruple);
+#if DEBUG
+    // test docolon/exit
+    interpret("42 double");
+    assert(sp[0] == 84);
+    interpret("drop");
+    assert(save == sp);
+
+    // test nested docolon/exit
+    interpret("9 quadruple");
+    assert(sp[0] == 36);
+    interpret("drop");
+    assert(save == sp);
+#endif
 
     char line[256];
 
