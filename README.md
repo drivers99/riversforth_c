@@ -26,13 +26,13 @@ Checklist of words to be implemented.
 - [x] 2DUP
 - [x] 2SWAP
 - [x] ?DUP
-- [ ] 1+
-- [ ] 1-
-- [ ] 4+
-- [ ] 4-
+- [x] 1+
+- [x] 1-
+- [x] 4+ (made it 8+ since it's 64-bit on my machine)
+- [x] 4- (made it 8- since it's 64-bit on my machine)
 - [x] +
-- [ ] -
-- [ ] *
+- [x] -
+- [x] *
 - [ ] /MOD
 - [ ] =
 - [ ] <>

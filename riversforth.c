@@ -143,46 +143,43 @@ void do_qdup(void) {
     }
 }
 
-/*
+void do_incr(void) {
+    // increment top of stack
+    sp[0]++;
+}
 
-	defcode "1+",2,,INCR
-	incl (%esp)		// increment top of stack
-	NEXT
+void do_decr(void) {
+    // decrement top of stack
+    sp[0]--;
+}
 
-	defcode "1-",2,,DECR
-	decl (%esp)		// decrement top of stack
-	NEXT
+void do_incr8(void) {
+    // add 8 (size of a Cell / pointer) to top of stack
+    sp[0] += 8;
+}
 
-	defcode "4+",2,,INCR4
-	addl $4,(%esp)		// add 4 to top of stack
-	NEXT
+void do_decr8(void) {
+    // subtract 8 (size of a Cell / pointer) from top of stack
+    sp[0] -= 8;
+}
 
-	defcode "4-",2,,DECR4
-	subl $4,(%esp)		// subtract 4 from top of stack
-	NEXT
-
-	defcode "+",1,,ADD
-	pop %eax		// get top of stack
-	addl %eax,(%esp)	// and add it to next word on stack
-	NEXT
-*/
-void do_plus(void) {
+void do_add(void) {
     Cell a = pop();
     sp[0] += a;
     //push(pop() + pop());
 }
-/*
-	defcode "-",1,,SUB
-	pop %eax		// get top of stack
-	subl %eax,(%esp)	// and subtract it from next word on stack
-	NEXT
 
-	defcode "*",1,,MUL
-	pop %eax
-	pop %ebx
-	imull %ebx,%eax
-	push %eax		// ignore overflow
-	NEXT
+void do_sub(void) {
+    Cell a = pop();
+    sp[0] -= a;
+}
+
+void do_mul(void) {
+    Cell a = pop();
+    sp[0] *= a; // ignores overflow
+}
+
+/*
 
 // 
 // 	In this FORTH, only /MOD is primitive.  Later we will define the / and MOD words in
@@ -349,12 +346,18 @@ Word word_twodrop = { NULL, "2DROP", do_twodrop, NULL };
 Word word_twodup  = { NULL, "2DUP" , do_twodup,  NULL };
 Word word_twoswap = { NULL, "2SWAP", do_twoswap, NULL };
 Word word_qdup    = { NULL, "?DUP",  do_qdup,    NULL };
+Word word_incr    = { NULL, "1+",    do_incr,    NULL };
+Word word_decr    = { NULL, "1-",    do_decr,    NULL };
+Word word_incr8   = { NULL, "8+",    do_incr8,   NULL };
+Word word_decr8   = { NULL, "8-",    do_decr8,   NULL };
+Word word_add     = { NULL, "+",     do_add,     NULL };
+Word word_sub     = { NULL, "-",     do_sub,     NULL };
+Word word_mul     = { NULL, "*",     do_mul,     NULL };
 
 Word word_dot     = { NULL, ".",     do_dot,     NULL };
-Word word_plus    = { NULL, "+",     do_plus,    NULL };
 Word word_exit    = { NULL, "EXIT",  do_exit,    NULL };
 
-Word *double_body[] = { &word_dup, &word_plus, &word_exit };
+Word *double_body[] = { &word_dup, &word_add, &word_exit };
 Word word_double = { NULL, "DOUBLE", docol, double_body };
 
 Word *quadruple_body[] = { &word_double, &word_double, &word_exit };
@@ -477,17 +480,6 @@ int main(void)
     assert(save == sp);
 #endif
 
-    add_word(&word_plus);
-#if DEBUG
-    interpret("11 22 +");
-    assert(pop() == 33);
-    assert(save == sp);
-
-    interpret("5 -8 +");
-    assert(pop() == -3);
-    assert(save == sp);
-#endif
-
     add_word(&word_rot);
 #if DEBUG
     interpret("1 2 3 rot");
@@ -542,6 +534,67 @@ int main(void)
     interpret("1 ?DUP");
     assert(pop() == 1);
     assert(pop() == 1);
+    assert(save == sp);
+#endif
+
+    add_word(&word_incr);
+#if DEBUG
+    interpret("5 1+");
+    assert(pop() == 6);
+    assert(save == sp);
+#endif
+
+    add_word(&word_decr);
+#if DEBUG
+    interpret("5 1-");
+    assert(pop() == 4);
+    assert(save == sp);
+#endif
+
+    add_word(&word_incr8);
+#if DEBUG
+    interpret("5 8+");
+    assert(pop() == 13);
+    assert(save == sp);
+#endif
+
+    add_word(&word_decr8);
+#if DEBUG
+    interpret("5 8-");
+    assert(pop() == -3);
+    assert(save == sp);
+#endif
+
+    add_word(&word_add);
+#if DEBUG
+    interpret("11 22 +");
+    assert(pop() == 33);
+    assert(save == sp);
+
+    interpret("5 -8 +");
+    assert(pop() == -3);
+    assert(save == sp);
+#endif
+
+    add_word(&word_sub);
+#if DEBUG
+    interpret("11 22 -");
+    assert(pop() == -11);
+    assert(save == sp);
+
+    interpret("5 -8 -");
+    assert(pop() == 13);
+    assert(save == sp);
+#endif
+
+    add_word(&word_mul);
+#if DEBUG
+    interpret("11 22 *");
+    assert(pop() == 242);
+    assert(save == sp);
+
+    interpret("5 -8 *");
+    assert(pop() == -40);
     assert(save == sp);
 #endif
 
