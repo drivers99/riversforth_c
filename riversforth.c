@@ -108,39 +108,34 @@ void do_nrot(void) {
     push(b); // ( c b a - a c b )
 }
 
+void do_twodrop(void) {
+    // drop top two elements of stack
+    pop();
+    pop();
+}
+
+void do_twodup(void) {
+    // duplicate top two elements of stack
+    Cell a = sp[0];
+    Cell b = sp[1];
+    push(b);
+    push(a);
+}
+
+void do_twoswap(void) {
+    // swap top two pairs of elements of stack
+    // ( d c b a -- b a d c )
+    Cell a = pop();
+    Cell b = pop();
+    Cell c = pop();
+    Cell d = pop();
+    push(b);
+    push(a);
+    push(d);
+    push(c);
+}
+
 /*
-
-	defcode "-ROT",4,,NROT
-	pop %eax
-	pop %ebx
-	pop %ecx
-	push %eax
-	push %ecx
-	push %ebx
-	NEXT
-
-	defcode "2DROP",5,,TWODROP // drop top two elements of stack
-	pop %eax
-	pop %eax
-	NEXT
-
-	defcode "2DUP",4,,TWODUP // duplicate top two elements of stack
-	mov (%esp),%eax
-	mov 4(%esp),%ebx
-	push %ebx
-	push %eax
-	NEXT
-
-	defcode "2SWAP",5,,TWOSWAP // swap top two pairs of elements of stack
-	pop %eax
-	pop %ebx
-	pop %ecx
-	pop %edx
-	push %ebx
-	push %eax
-	push %edx
-	push %ecx
-	NEXT
 
 	defcode "?DUP",4,,QDUP	// duplicate top of stack if non-zero
 	movl (%esp),%eax
@@ -343,16 +338,19 @@ void docol(void) {
 }
 
 //                 link  name    code     params (e.g.docol code body)
-Word word_drop = { NULL, "DROP", do_drop, NULL };
-Word word_swap = { NULL, "SWAP", do_swap, NULL };
-Word word_dup  = { NULL, "DUP",  do_dup,  NULL };
-Word word_over = { NULL, "OVER", do_over, NULL };
-Word word_rot  = { NULL, "ROT",  do_rot,  NULL };
-Word word_nrot = { NULL, "-ROT", do_nrot, NULL };
+Word word_drop    = { NULL, "DROP",  do_drop,    NULL };
+Word word_swap    = { NULL, "SWAP",  do_swap,    NULL };
+Word word_dup     = { NULL, "DUP",   do_dup,     NULL };
+Word word_over    = { NULL, "OVER",  do_over,    NULL };
+Word word_rot     = { NULL, "ROT",   do_rot,     NULL };
+Word word_nrot    = { NULL, "-ROT",  do_nrot,    NULL };
+Word word_twodrop = { NULL, "2DROP", do_twodrop, NULL };
+Word word_twodup  = { NULL, "2DUP" , do_twodup,  NULL };
+Word word_twoswap = { NULL, "2SWAP", do_twoswap, NULL };
 
-Word word_dot  = { NULL, ".",    do_dot,  NULL };
-Word word_plus = { NULL, "+",    do_plus, NULL };
-Word word_exit = { NULL, "EXIT", do_exit, NULL };
+Word word_dot     = { NULL, ".",     do_dot,     NULL };
+Word word_plus    = { NULL, "+",     do_plus,    NULL };
+Word word_exit    = { NULL, "EXIT",  do_exit,    NULL };
 
 Word *double_body[] = { &word_dup, &word_plus, &word_exit };
 Word word_double = { NULL, "DOUBLE", docol, double_body };
@@ -453,75 +451,87 @@ int main(void)
 #if DEBUG
     Cell *save = sp;
     interpret("1 2 drop");
-    assert(sp[0] == 1);
-    interpret("drop");
+    assert(pop() == 1);
     assert(save == sp);
 #endif
 
     add_word(&word_swap);
 #if DEBUG
     interpret("2 1 swap drop");
-    assert(sp[0] == 1);
-    interpret("drop");
+    assert(pop() == 1);
     assert(save == sp);
 #endif
 
     add_word(&word_dup);
 #if DEBUG
     interpret("42 dup");
-    assert(sp[0] == 42);
-    interpret("drop");
-    assert(sp[0] == 42);
-    interpret("drop");
+    assert(pop() == 42);
+    assert(pop() == 42);
     assert(save == sp);
 #endif
 
     add_word(&word_over);
 #if DEBUG
     interpret("10 11 over");
-    assert(sp[0] == 10);
-    interpret("drop");
-    assert(sp[0] == 11);
-    interpret("drop");
-    assert(sp[0] == 10);
-    interpret("drop");
+    assert(pop() == 10);
+    assert(pop() == 11);
+    assert(pop() == 10);
     assert(save == sp);
 #endif
 
     add_word(&word_plus);
 #if DEBUG
     interpret("11 22 +");
-    assert(sp[0] == 33);
-    interpret("drop");
+    assert(pop() == 33);
     assert(save == sp);
 
     interpret("5 -8 +");
-    assert(sp[0] == -3);
-    interpret("drop");
+    assert(pop() == -3);
     assert(save == sp);
 #endif
 
     add_word(&word_rot);
 #if DEBUG
     interpret("1 2 3 rot");
-    assert(sp[0] == 1);
-    interpret("drop");
-    assert(sp[0] == 3);
-    interpret("drop");
-    assert(sp[0] == 2);
-    interpret("drop");
+    assert(pop() == 1);
+    assert(pop() == 3);
+    assert(pop() == 2);
     assert(save == sp);
 #endif
 
     add_word(&word_nrot);
 #if DEBUG
     interpret("1 2 3 -rot");
-    assert(sp[0] == 2);
-    interpret("drop");
-    assert(sp[0] == 1);
-    interpret("drop");
-    assert(sp[0] == 3);
-    interpret("drop");
+    assert(pop() == 2);
+    assert(pop() == 1);
+    assert(pop() == 3);
+    assert(save == sp);
+#endif
+
+    add_word(&word_twodrop);
+#if DEBUG
+    interpret("1 2 3 2drop");
+    assert(pop() == 1);
+    assert(save == sp);
+#endif
+
+    add_word(&word_twodup);
+#if DEBUG
+    interpret("5 6 2dup");
+    assert(pop() == 6);
+    assert(pop() == 5);
+    assert(pop() == 6);
+    assert(pop() == 5);
+    assert(save == sp);
+#endif
+
+    add_word(&word_twoswap);
+#if DEBUG
+    interpret("5 6 7 8 2swap");
+    assert(pop() == 6);
+    assert(pop() == 5);
+    assert(pop() == 8);
+    assert(pop() == 7);
     assert(save == sp);
 #endif
 
@@ -531,14 +541,12 @@ int main(void)
 #if DEBUG
     // test docolon/exit
     interpret("42 double");
-    assert(sp[0] == 84);
-    interpret("drop");
+    assert(pop() == 84);
     assert(save == sp);
 
     // test nested docolon/exit
     interpret("9 quadruple");
-    assert(sp[0] == 36);
-    interpret("drop");
+    assert(pop() == 36);
     assert(save == sp);
 #endif
 
