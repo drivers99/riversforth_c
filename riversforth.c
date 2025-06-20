@@ -337,6 +337,7 @@ Word word_drop = { NULL, "DROP", do_drop, NULL };
 Word word_swap = { NULL, "SWAP", do_swap, NULL };
 Word word_dup  = { NULL, "DUP",  do_dup,  NULL };
 Word word_over = { NULL, "OVER", do_over, NULL };
+Word word_rot  = { NULL, "ROT",  do_rot,  NULL };
 
 Word word_dot  = { NULL, ".",    do_dot,  NULL };
 Word word_plus = { NULL, "+",    do_plus, NULL };
@@ -479,6 +480,18 @@ int main(void)
 
     interpret("5 -8 +");
     assert(sp[0] == -3);
+    interpret("drop");
+    assert(save == sp);
+#endif
+
+    add_word(&word_rot);
+#if DEBUG
+    interpret("1 2 3 rot");
+    assert(sp[0] == 1);
+    interpret("drop");
+    assert(sp[0] == 3);
+    interpret("drop");
+    assert(sp[0] == 2);
     interpret("drop");
     assert(save == sp);
 #endif
