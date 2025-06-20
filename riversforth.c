@@ -98,6 +98,16 @@ void do_rot(void) {
     // having to remember semicolons and declaring variable types is
     // easy to forget when you're used to writing in Python
 }
+
+void do_nrot(void) {
+    Cell a = pop();
+    Cell b = pop();
+    Cell c = pop();
+    push(a);
+    push(c);
+    push(b); // ( c b a - a c b )
+}
+
 /*
 
 	defcode "-ROT",4,,NROT
@@ -338,6 +348,7 @@ Word word_swap = { NULL, "SWAP", do_swap, NULL };
 Word word_dup  = { NULL, "DUP",  do_dup,  NULL };
 Word word_over = { NULL, "OVER", do_over, NULL };
 Word word_rot  = { NULL, "ROT",  do_rot,  NULL };
+Word word_nrot = { NULL, "-ROT", do_nrot, NULL };
 
 Word word_dot  = { NULL, ".",    do_dot,  NULL };
 Word word_plus = { NULL, "+",    do_plus, NULL };
@@ -432,6 +443,12 @@ int main(void)
     // interesting that the words can be added in another order
     // we probably shouldn't do that
     // going to arrange it in an order that could happen
+    
+    // moving this to the top so we can use it to troubleshoot
+    // but I think it will also get converted to native Forth once we get to that point
+    add_word(&word_dot); 
+    // no test for dot
+
     add_word(&word_drop);
 #if DEBUG
     Cell *save = sp;
@@ -496,8 +513,17 @@ int main(void)
     assert(save == sp);
 #endif
 
-    add_word(&word_dot);
-    // no test for dot
+    add_word(&word_nrot);
+#if DEBUG
+    interpret("1 2 3 -rot");
+    assert(sp[0] == 2);
+    interpret("drop");
+    assert(sp[0] == 1);
+    interpret("drop");
+    assert(sp[0] == 3);
+    interpret("drop");
+    assert(save == sp);
+#endif
 
     add_word(&word_exit);
     add_word(&word_double);
