@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#define VERSION 1
 #define DEBUG 1
 
 typedef intptr_t Cell; // 64 bits or 8 bytes
@@ -468,7 +469,43 @@ Word word_var_here   = { NULL, "HERE",   do_var_here,   NULL };
 Word word_var_s0     = { NULL, "S0",     do_var_s0,     NULL };
 Word word_var_base   = { NULL, "BASE",   do_var_base,   NULL };
 
-// interesting... built in words don't live in the actual dictionary
+// built-in constants:
+
+void do_con_version(void) {
+    // VERSION, the current version of this FORTH
+    push(VERSION);
+}
+
+Cell *r0;
+void do_con_r0(void) {
+    // R0, The address of the top of the return stack.
+    push((Cell)r0);
+}
+
+void do_con_docol(void) {
+    // DOCOL, Pointer to DOCOL.
+    push((Cell)docol);
+}
+
+Cell F_IMMED = 1;
+void do_con_f_immed(void) {
+    // F_IMMED, The IMMEDIATE flag's actual value.
+    push(F_IMMED);
+}
+
+Cell F_HIDDEN = 2;
+void do_con_f_hidden(void) {
+    // F_HIDDEN, The HIDDEN flag's actual value.
+    push(F_HIDDEN);
+}
+
+Word word_do_con_version  = { NULL, "VERSION",  do_con_version, NULL };
+Word word_do_con_r0       = { NULL, "R0",       do_con_r0,      NULL };
+Word word_do_con_docol    = { NULL, "DOCOL",    do_con_docol,   NULL };
+Word word_do_con_f_immed  = { NULL, "F_IMMED",  do_con_f_immed, NULL };
+Word word_do_con_f_hidden = { NULL, "F_HIDDEN", do_con_f_hidden, NULL };
+
+// Note: built in words don't live in the actual dictionary / user data space
 void add_word(Word *w) {
     w->link = latest;
     latest = w;
@@ -549,6 +586,7 @@ void interpret(char *line) {
 int main(void)
 {
     s0 = sp; // initial value of sp. We must assign in main (or any function) because it's not a constant
+    r0 = rp; // initial value of rp. ditto.
 
     // DOT at the top so we can use it in unit tests
     // but I think it will also get converted to native Forth once we get to that point
@@ -1075,16 +1113,31 @@ int main(void)
     assert(pop() == 0);
     assert(save == sp);
     interpret("latest");
-    assert(pop() == latest);
+    assert(pop() == (Cell)latest);
     assert(save == sp);
     interpret("here");
-    assert(pop() == dictionary);
+    assert(pop() == (Cell)dictionary);
     assert(save == sp);
     interpret("s0");
-    assert(pop() == s0);
+    assert(pop() == (Cell)s0);
     assert(save == s0); // note: also checking if save and s0 are the same
     interpret("base");
     assert(pop() == 10);
+    assert(save == sp);
+#endif
+
+    add_word(&word_do_con_version);
+    add_word(&word_do_con_r0);
+    add_word(&word_do_con_docol);
+    add_word(&word_do_con_f_immed);
+    add_word(&word_do_con_f_hidden);
+#if DEBUG
+    interpret("VERSION R0 DOCOL F_IMMED F_HIDDEN");
+    assert(pop() == 2);
+    assert(pop() == 1);
+    assert(pop() == (Cell)docol);
+    assert(pop() == (Cell)r0);
+    assert(pop() == VERSION);
     assert(save == sp);
 #endif
 

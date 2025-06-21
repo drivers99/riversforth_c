@@ -78,13 +78,11 @@ Checklist of words to be implemented.
 
 ### Built in constants
 
-- [ ] VERSION
-- [ ] R0
-- [ ] DOCOL (written in C currently)
-- [ ] F_IMMED
-- [ ] F_HIDDEN
-- [ ] F_LENMASK
-- [ ] SYS_*
+- [x] VERSION
+- [x] R0
+- [x] DOCOL (written in C currently)
+- [x] F_IMMED
+- [x] F_HIDDEN
 
 ### Return stack words
 
