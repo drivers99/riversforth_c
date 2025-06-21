@@ -296,6 +296,14 @@ void do_invert(void) {
     sp[0] = ~sp[0];
 }
 
+void do_lit (void) {
+    // get the next Cell in the params (colon defined code body)
+    // as a literal value and push it on the stack
+    // then advance ip as if it had never been there
+    // so we don't try to execute it
+    // TODO wouldn't this do something undefined if you ran it interactively?
+    push(*ip++);
+}
 
 void docol(void) {
     rp--; // Cell *
@@ -340,15 +348,18 @@ Word word_and     = { NULL, "AND",    do_and,     NULL };
 Word word_or      = { NULL, "OR",     do_or,      NULL };
 Word word_xor     = { NULL, "XOR",    do_xor,     NULL };
 Word word_invert  = { NULL, "INVERT", do_invert,  NULL };
-
-Word word_dot     = { NULL, ".",      do_dot,     NULL };
 Word word_exit    = { NULL, "EXIT",   do_exit,    NULL };
+Word word_lit     = { NULL, "LIT",    do_lit,     NULL };
+Word word_dot     = { NULL, ".",      do_dot,     NULL };
 
 Word *double_body[] = { &word_dup, &word_add, &word_exit };
 Word word_double =    { NULL, "DOUBLE",    docol, double_body };
 
 Word *quadruple_body[] = { &word_double, &word_double, &word_exit };
 Word word_quadruple = { NULL, "QUADRUPLE", docol, quadruple_body };
+
+Word *testlit_body[] = { &word_lit, (void *)21, &word_double, &word_exit };
+Word word_testlit =   { NULL, "TESTLIT",   docol, testlit_body };
 
 // interesting... built in words don't live in the actual dictionary
 void add_word(Word *w) {
@@ -835,6 +846,7 @@ int main(void)
     add_word(&word_exit);
     add_word(&word_double);
     add_word(&word_quadruple);
+    add_word(&word_testlit);
 #if DEBUG
     // test docolon/exit
     interpret("42 double");
@@ -844,6 +856,11 @@ int main(void)
     // test nested docolon/exit
     interpret("9 quadruple");
     assert(pop() == 36);
+    assert(save == sp);
+
+    // test LIT
+    interpret("testlit");
+    assert(pop() == 42);
     assert(save == sp);
 #endif
 

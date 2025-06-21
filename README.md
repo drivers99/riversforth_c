@@ -56,7 +56,7 @@ Checklist of words to be implemented.
 ### More FORTH primitives
 
 - [x] EXIT
-- [ ] LIT
+- [x] LIT
 
 ### FORTH Memory primitives
 
