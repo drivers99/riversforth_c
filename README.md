@@ -36,18 +36,18 @@ Checklist of words to be implemented.
 - [x] /MOD (also did / (DIV) and % (MOD) as primitives since it's not using an assembly instruction for /MOD like JonesForth)
 - [x] /
 - [x] % (modulo)
-- [ ] =
-- [ ] <>
-- [ ] <
-- [ ] >
-- [ ] <=
-- [ ] >=
-- [ ] 0=
-- [ ] 0<>
-- [ ] 0<
-- [ ] 0>
-- [ ] 0<=
-- [ ] 0>=
+- [x] =
+- [x] <>
+- [x] <
+- [x] >
+- [x] <=
+- [x] >=
+- [x] 0=
+- [x] 0<>
+- [x] 0<
+- [x] 0>
+- [x] 0<=
+- [x] 0>=
 - [ ] AND
 - [ ] OR
 - [ ] XOR

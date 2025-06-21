@@ -196,118 +196,79 @@ void do_divmod(void) {
     push(b / a); // push quotient
 }
 
+// TODO determine if we want to change value of False for Forth standards compliance
+void do_equ(void) {
+    // top two words are equal?
+    Cell a = pop();
+    Cell b = pop();
+    push (a == b);
+}
+
+void do_nequ(void) {
+    // top two words are not equal?
+    Cell a = pop();
+    Cell b = pop();
+    push (a != b);
+}
+
+void do_lt(void) {
+    Cell a = pop();
+    Cell b = pop();
+    push (b < a);
+}
+
+void do_gt(void) {
+    Cell a = pop();
+    Cell b = pop();
+    push (b > a);
+}
+
+void do_le(void) {
+    Cell a = pop();
+    Cell b = pop();
+    push (b <= a);
+}
+
+void do_ge(void) {
+    Cell a = pop();
+    Cell b = pop();
+    push (b >= a);
+}
+
+// comparisons with 0
+void do_zequ(void) {
+    // top of stack equals 0?
+    Cell b = pop();
+    push (b == 0);
+}
+
+void do_znequ(void) {
+    // top of stack not 0?
+    Cell b = pop();
+    push (b != 0);
+}
+
+void do_zlt(void) {
+    Cell b = pop();
+    push (b < 0);
+}
+
+void do_zgt(void) {
+    Cell b = pop();
+    push (b > 0);
+}
+
+void do_zle(void) {
+    Cell b = pop();
+    push (b <= 0);
+}
+
+void do_zge(void) {
+    Cell b = pop();
+    push (b >= 0);
+}
+
 /*
-
-// 
-// 	Lots of comparison operations like =, <, >, etc..
-
-// 	ANS FORTH says that the comparison words should return all (binary) 1's for
-// 	TRUE and all 0's for FALSE.  However this is a bit of a strange convention
-// 	so this FORTH breaks it and returns the more normal (for C programmers ...)
-// 	1 meaning TRUE and 0 meaning FALSE.
-// 
-
-	defcode "=",1,,EQU	// top two words are equal?
-	pop %eax
-	pop %ebx
-	cmp %ebx,%eax
-	sete %al
-	movzbl %al,%eax
-	pushl %eax
-	NEXT
-
-	defcode "<>",2,,NEQU	// top two words are not equal?
-	pop %eax
-	pop %ebx
-	cmp %ebx,%eax
-	setne %al
-	movzbl %al,%eax
-	pushl %eax
-	NEXT
-
-	defcode "<",1,,LT
-	pop %eax
-	pop %ebx
-	cmp %eax,%ebx
-	setl %al
-	movzbl %al,%eax
-	pushl %eax
-	NEXT
-
-	defcode ">",1,,GT
-	pop %eax
-	pop %ebx
-	cmp %eax,%ebx
-	setg %al
-	movzbl %al,%eax
-	pushl %eax
-	NEXT
-
-	defcode "<=",2,,LE
-	pop %eax
-	pop %ebx
-	cmp %eax,%ebx
-	setle %al
-	movzbl %al,%eax
-	pushl %eax
-	NEXT
-
-	defcode ">=",2,,GE
-	pop %eax
-	pop %ebx
-	cmp %eax,%ebx
-	setge %al
-	movzbl %al,%eax
-	pushl %eax
-	NEXT
-
-	defcode "0=",2,,ZEQU	// top of stack equals 0?
-	pop %eax
-	test %eax,%eax
-	setz %al
-	movzbl %al,%eax
-	pushl %eax
-	NEXT
-
-	defcode "0<>",3,,ZNEQU	// top of stack not 0?
-	pop %eax
-	test %eax,%eax
-	setnz %al
-	movzbl %al,%eax
-	pushl %eax
-	NEXT
-
-	defcode "0<",2,,ZLT	// comparisons with 0
-	pop %eax
-	test %eax,%eax
-	setl %al
-	movzbl %al,%eax
-	pushl %eax
-	NEXT
-
-	defcode "0>",2,,ZGT
-	pop %eax
-	test %eax,%eax
-	setg %al
-	movzbl %al,%eax
-	pushl %eax
-	NEXT
-
-	defcode "0<=",3,,ZLE
-	pop %eax
-	test %eax,%eax
-	setle %al
-	movzbl %al,%eax
-	pushl %eax
-	NEXT
-
-	defcode "0>=",3,,ZGE
-	pop %eax
-	test %eax,%eax
-	setge %al
-	movzbl %al,%eax
-	pushl %eax
-	NEXT
 
 	defcode "AND",3,,AND	// bitwise AND
 	pop %eax
@@ -358,6 +319,18 @@ Word word_mul     = { NULL, "*",     do_mul,     NULL };
 Word word_div     = { NULL, "/",     do_div,     NULL };
 Word word_mod     = { NULL, "%",     do_mod,     NULL };
 Word word_divmod  = { NULL, "/MOD",  do_divmod,  NULL };
+Word word_equ     = { NULL, "=",     do_equ,     NULL };
+Word word_nequ    = { NULL, "<>",    do_nequ,    NULL };
+Word word_lt      = { NULL, "<",     do_lt,      NULL };
+Word word_gt      = { NULL, ">",     do_gt,      NULL };
+Word word_le      = { NULL, "<=",    do_le,      NULL };
+Word word_ge      = { NULL, ">=",    do_ge,      NULL };
+Word word_zequ    = { NULL, "0=",    do_zequ,    NULL };
+Word word_znequ   = { NULL, "0<>",   do_znequ,   NULL };
+Word word_zlt     = { NULL, "0<",    do_zlt,     NULL };
+Word word_zgt     = { NULL, "0>",    do_zgt,     NULL };
+Word word_zle     = { NULL, "0<=",   do_zle,     NULL };
+Word word_zge     = { NULL, "0>=",   do_zge,     NULL };
 
 Word word_dot     = { NULL, ".",     do_dot,     NULL };
 Word word_exit    = { NULL, "EXIT",  do_exit,    NULL };
@@ -642,6 +615,185 @@ int main(void)
     // TODO how SHOULD this work if either number is negative?
 #endif
 
+    add_word(&word_equ);
+#if DEBUG
+    interpret("5 5 =");
+    assert(pop() == 1);
+    assert(save == sp);
+
+    interpret("5 6 =");
+    assert(pop() == 0);
+    assert(save == sp);
+
+    interpret("6 5 =");
+    assert(pop() == 0);
+    assert(save == sp);
+#endif
+
+    add_word(&word_nequ);
+#if DEBUG
+    interpret("5 5 <>");
+    assert(pop() == 0);
+    assert(save == sp);
+
+    interpret("5 6 <>");
+    assert(pop() == 1);
+    assert(save == sp);
+
+    interpret("6 5 <>");
+    assert(pop() == 1);
+    assert(save == sp);
+#endif
+
+    add_word(&word_lt);
+#if DEBUG
+    interpret("5 5 <");
+    assert(pop() == 0);
+    assert(save == sp);
+
+    interpret("5 6 <");
+    assert(pop() == 1);
+    assert(save == sp);
+
+    interpret("6 5 <");
+    assert(pop() == 0);
+    assert(save == sp);
+#endif
+
+    add_word(&word_gt);
+#if DEBUG
+    interpret("5 5 >");
+    assert(pop() == 0);
+    assert(save == sp);
+
+    interpret("5 6 >");
+    assert(pop() == 0);
+    assert(save == sp);
+
+    interpret("6 5 >");
+    assert(pop() == 1);
+    assert(save == sp);
+#endif
+
+    add_word(&word_le);
+#if DEBUG
+    interpret("5 5 <=");
+    assert(pop() == 1);
+    assert(save == sp);
+
+    interpret("5 6 <=");
+    assert(pop() == 1);
+    assert(save == sp);
+
+    interpret("6 5 <=");
+    assert(pop() == 0);
+    assert(save == sp);
+#endif
+
+    add_word(&word_ge);
+#if DEBUG
+    interpret("5 5 >=");
+    assert(pop() == 1);
+    assert(save == sp);
+
+    interpret("5 6 >=");
+    assert(pop() == 0);
+    assert(save == sp);
+
+    interpret("6 5 >=");
+    assert(pop() == 1);
+    assert(save == sp);
+#endif
+
+    add_word(&word_zequ);
+#if DEBUG
+    interpret("0 0=");
+    assert(pop() == 1);
+    assert(save == sp);
+
+    interpret("-5 0=");
+    assert(pop() == 0);
+    assert(save == sp);
+
+    interpret("5 0=");
+    assert(pop() == 0);
+    assert(save == sp);
+#endif
+
+    add_word(&word_znequ);
+#if DEBUG
+    interpret("0 0<>");
+    assert(pop() == 0);
+    assert(save == sp);
+
+    interpret("-5 0<>");
+    assert(pop() == 1);
+    assert(save == sp);
+    
+    interpret("5 0<>");
+    assert(pop() == 1);
+    assert(save == sp);
+#endif
+
+    add_word(&word_zlt);
+#if DEBUG
+    interpret("0 0<");
+    assert(pop() == 0);
+    assert(save == sp);
+
+    interpret("-5 0<");
+    assert(pop() == 1);
+    assert(save == sp);
+
+    interpret("5 0<");
+    assert(pop() == 0);
+    assert(save == sp);
+#endif
+
+    add_word(&word_zgt);
+#if DEBUG
+    interpret("0 0>");
+    assert(pop() == 0);
+    assert(save == sp);
+
+    interpret("-5 0>");
+    assert(pop() == 0);
+    assert(save == sp);
+
+    interpret("5 0>");
+    assert(pop() == 1);
+    assert(save == sp);
+#endif
+
+    add_word(&word_zle);
+#if DEBUG
+    interpret("0 0<=");
+    assert(pop() == 1);
+    assert(save == sp);
+
+    interpret("-5 0<=");
+    assert(pop() == 1);
+    assert(save == sp);
+
+    interpret("5 0<=");
+    assert(pop() == 0);
+    assert(save == sp);
+#endif
+
+    add_word(&word_zge);
+#if DEBUG
+    interpret("0 0>=");
+    assert(pop() == 1);
+    assert(save == sp);
+
+    interpret("-5 0>=");
+    assert(pop() == 0);
+    assert(save == sp);
+
+    interpret("5 0>=");
+    assert(pop() == 1);
+    assert(save == sp);
+#endif
 
     add_word(&word_exit);
     add_word(&word_double);
