@@ -43,9 +43,8 @@ void push(Cell x) { *--sp = x; } // TODO add bounds checking
 Cell pop(void) { return *sp++; } // TODO add bounds checking
 
 Cell dictionary[DICTIONARY_SIZE];
-Cell *here = 0;
-Word *last = NULL; // head of dictionary linked list
-Word *current_word = NULL; // last and current word really are Word pointers though
+Word *latest = NULL; // head of dictionary linked list
+Word *current_word = NULL;
 
 void do_dot(void) {
     printf("%ld ", pop());
@@ -432,10 +431,47 @@ Word word_quadruple = { NULL, "QUADRUPLE", docol, quadruple_body };
 Word *testlit_body[] = { &word_lit, (void *)21, &word_double, &word_exit };
 Word word_testlit =   { NULL, "TESTLIT",   docol, testlit_body };
 
+// built-in variables:
+
+Cell state = 0;
+void do_var_state(void) {
+    // Is the interpreter executing code (0) or compiling a word (non-zero)?
+    push(state);
+}
+
+void do_var_latest(void) {
+    // Points to the latest (most recently defined) word in the dictionary.
+    push((Cell)latest);
+}
+
+Cell *here = dictionary;
+void do_var_here(void) {
+    // Points to the next free byte of memory.  When compiling, compiled words go here.
+    push((Cell)here);
+}
+
+Cell *s0; // initial value of sp
+void do_var_s0(void) {
+    // Stores the address of the top of the parameter stack.
+    push((Cell)s0);
+}
+
+Cell base = 10;
+void do_var_base(void) {
+    // The current base for printing and reading numbers.
+    push(base);
+}
+
+Word word_var_state  = { NULL, "STATE",  do_var_state,  NULL };
+Word word_var_latest = { NULL, "LATEST", do_var_latest, NULL };
+Word word_var_here   = { NULL, "HERE",   do_var_here,   NULL };
+Word word_var_s0     = { NULL, "S0",     do_var_s0,     NULL };
+Word word_var_base   = { NULL, "BASE",   do_var_base,   NULL };
+
 // interesting... built in words don't live in the actual dictionary
 void add_word(Word *w) {
-    w->link = last;
-    last = w;
+    w->link = latest;
+    latest = w;
 }
 
 void run(Word *start) {
@@ -453,7 +489,7 @@ void run(Word *start) {
 }
 
 Word *find(const char *name) {
-    for (Word *w = last; w != NULL; w = w->link) {
+    for (Word *w = latest; w != NULL; w = w->link) {
         if (strcasecmp(w->name, name) == 0) {
             return w;
         }
@@ -512,6 +548,8 @@ void interpret(char *line) {
 
 int main(void)
 {
+    s0 = sp; // initial value of sp. We must assign in main (or any function) because it's not a constant
+
     // DOT at the top so we can use it in unit tests
     // but I think it will also get converted to native Forth once we get to that point
     add_word(&word_dot); 
@@ -1024,6 +1062,29 @@ int main(void)
     // test LIT
     interpret("testlit");
     assert(pop() == 42);
+    assert(save == sp);
+#endif
+
+    add_word(&word_var_state);
+    add_word(&word_var_latest);
+    add_word(&word_var_here);
+    add_word(&word_var_s0);
+    add_word(&word_var_base);
+#if DEBUG
+    interpret("state");
+    assert(pop() == 0);
+    assert(save == sp);
+    interpret("latest");
+    assert(pop() == latest);
+    assert(save == sp);
+    interpret("here");
+    assert(pop() == dictionary);
+    assert(save == sp);
+    interpret("s0");
+    assert(pop() == s0);
+    assert(save == s0); // note: also checking if save and s0 are the same
+    interpret("base");
+    assert(pop() == 10);
     assert(save == sp);
 #endif
 

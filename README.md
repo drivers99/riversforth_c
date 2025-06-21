@@ -70,11 +70,11 @@ Checklist of words to be implemented.
 - [x] CMOVE
 
 ### Built in variables
-- [ ] STATE
-- [ ] HERE (not available in FORTH yet)
-- [ ] LATEST (accidentally called "last", not available in FORTH yet)
-- [ ] S0
-- [ ] BASE
+- [x] STATE
+- [x] HERE
+- [x] LATEST
+- [x] S0
+- [x] BASE
 
 ### Built in constants
 
