@@ -60,14 +60,14 @@ Checklist of words to be implemented.
 
 ### FORTH Memory primitives
 
-- [ ] !
-- [ ] @
-- [ ] +!
-- [ ] -!
-- [ ] C!
-- [ ] C@
-- [ ] C@C!
-- [ ] CMOVE
+- [x] !
+- [x] @
+- [x] +!
+- [x] -!
+- [x] C!
+- [x] C@
+- [x] C@C!
+- [x] CMOVE
 
 ### Built in variables
 - [ ] STATE

@@ -305,51 +305,122 @@ void do_lit (void) {
     push(*ip++);
 }
 
+void do_store(void) {
+    // !
+    Cell *addr = (Cell *)pop();
+    Cell data = pop();
+    *addr = data;
+}
+
+void do_fetch(void) {
+    // @
+    Cell *addr = (Cell *)pop();
+    Cell data = *addr;
+    push(data);
+}
+
+void do_addstore(void) {
+    // +!
+    Cell *addr = (Cell *)pop();
+    Cell amount = pop();
+    *addr += amount;
+}
+
+void do_substore(void) {
+    // -!
+    Cell *addr = (Cell *)pop();
+    Cell amount = pop();
+    *addr -= amount;
+}
+
+// TODO make sure this truncates >255
+void do_storebyte(void) {
+    // C!
+    uint8_t *addr = (uint8_t *)pop();
+    uint8_t data = (uint8_t)pop();
+    *addr = data;
+}
+
+void do_fetchbyte(void) {
+    // C@
+    uint8_t *addr = (uint8_t *)pop();
+    uint8_t data = *addr;
+    push((Cell)data);
+}
+
+void do_ccopy(void) {
+    // C@C!
+    uint8_t *dst = (uint8_t *)pop();
+    uint8_t *src = (uint8_t *)pop();
+    *dst++ = *src++;
+    push((Cell)src);
+    push((Cell)dst);
+}
+
+void do_cmove(void) {
+    Cell length = pop();
+    uint8_t *dst = (uint8_t *)pop();
+    uint8_t *src = (uint8_t *)pop();
+    for (int i = 0; i < length; i++) {
+        dst[i] = src[i];
+    }
+}
+
+
 void docol(void) {
     rp--; // Cell *
     *rp = (Cell)ip; // rp is Cell *.  *rp is Cell.  ip is Cell *.  Cast to Cell.
     ip = (Cell *)current_word->params; // ip is Cell *. current_word is Word *. params is... void *!
 }
 
-//                    link  name      code        params (e.g.docol code body)
-Word word_drop    = { NULL, "DROP",   do_drop,    NULL };
-Word word_swap    = { NULL, "SWAP",   do_swap,    NULL };
-Word word_dup     = { NULL, "DUP",    do_dup,     NULL };
-Word word_over    = { NULL, "OVER",   do_over,    NULL };
-Word word_rot     = { NULL, "ROT",    do_rot,     NULL };
-Word word_nrot    = { NULL, "-ROT",   do_nrot,    NULL };
-Word word_twodrop = { NULL, "2DROP",  do_twodrop, NULL };
-Word word_twodup  = { NULL, "2DUP" ,  do_twodup,  NULL };
-Word word_twoswap = { NULL, "2SWAP",  do_twoswap, NULL };
-Word word_qdup    = { NULL, "?DUP",   do_qdup,    NULL };
-Word word_incr    = { NULL, "1+",     do_incr,    NULL };
-Word word_decr    = { NULL, "1-",     do_decr,    NULL };
-Word word_incr8   = { NULL, "8+",     do_incr8,   NULL };
-Word word_decr8   = { NULL, "8-",     do_decr8,   NULL };
-Word word_add     = { NULL, "+",      do_add,     NULL };
-Word word_sub     = { NULL, "-",      do_sub,     NULL };
-Word word_mul     = { NULL, "*",      do_mul,     NULL };
-Word word_div     = { NULL, "/",      do_div,     NULL };
-Word word_mod     = { NULL, "%",      do_mod,     NULL };
-Word word_divmod  = { NULL, "/MOD",   do_divmod,  NULL };
-Word word_equ     = { NULL, "=",      do_equ,     NULL };
-Word word_nequ    = { NULL, "<>",     do_nequ,    NULL };
-Word word_lt      = { NULL, "<",      do_lt,      NULL };
-Word word_gt      = { NULL, ">",      do_gt,      NULL };
-Word word_le      = { NULL, "<=",     do_le,      NULL };
-Word word_ge      = { NULL, ">=",     do_ge,      NULL };
-Word word_zequ    = { NULL, "0=",     do_zequ,    NULL };
-Word word_znequ   = { NULL, "0<>",    do_znequ,   NULL };
-Word word_zlt     = { NULL, "0<",     do_zlt,     NULL };
-Word word_zgt     = { NULL, "0>",     do_zgt,     NULL };
-Word word_zle     = { NULL, "0<=",    do_zle,     NULL };
-Word word_zge     = { NULL, "0>=",    do_zge,     NULL };
-Word word_and     = { NULL, "AND",    do_and,     NULL };
-Word word_or      = { NULL, "OR",     do_or,      NULL };
-Word word_xor     = { NULL, "XOR",    do_xor,     NULL };
-Word word_invert  = { NULL, "INVERT", do_invert,  NULL };
-Word word_exit    = { NULL, "EXIT",   do_exit,    NULL };
-Word word_lit     = { NULL, "LIT",    do_lit,     NULL };
+//                      link  name      code          params (e.g.docol code body)
+Word word_drop      = { NULL, "DROP",   do_drop,      NULL };
+Word word_swap      = { NULL, "SWAP",   do_swap,      NULL };
+Word word_dup       = { NULL, "DUP",    do_dup,       NULL };
+Word word_over      = { NULL, "OVER",   do_over,      NULL };
+Word word_rot       = { NULL, "ROT",    do_rot,       NULL };
+Word word_nrot      = { NULL, "-ROT",   do_nrot,      NULL };
+Word word_twodrop   = { NULL, "2DROP",  do_twodrop,   NULL };
+Word word_twodup    = { NULL, "2DUP" ,  do_twodup,    NULL };
+Word word_twoswap   = { NULL, "2SWAP",  do_twoswap,   NULL };
+Word word_qdup      = { NULL, "?DUP",   do_qdup,      NULL };
+Word word_incr      = { NULL, "1+",     do_incr,      NULL };
+Word word_decr      = { NULL, "1-",     do_decr,      NULL };
+Word word_incr8     = { NULL, "8+",     do_incr8,     NULL };
+Word word_decr8     = { NULL, "8-",     do_decr8,     NULL };
+Word word_add       = { NULL, "+",      do_add,       NULL };
+Word word_sub       = { NULL, "-",      do_sub,       NULL };
+Word word_mul       = { NULL, "*",      do_mul,       NULL };
+Word word_div       = { NULL, "/",      do_div,       NULL };
+Word word_mod       = { NULL, "%",      do_mod,       NULL };
+Word word_divmod    = { NULL, "/MOD",   do_divmod,    NULL };
+Word word_equ       = { NULL, "=",      do_equ,       NULL };
+Word word_nequ      = { NULL, "<>",     do_nequ,      NULL };
+Word word_lt        = { NULL, "<",      do_lt,        NULL };
+Word word_gt        = { NULL, ">",      do_gt,        NULL };
+Word word_le        = { NULL, "<=",     do_le,        NULL };
+Word word_ge        = { NULL, ">=",     do_ge,        NULL };
+Word word_zequ      = { NULL, "0=",     do_zequ,      NULL };
+Word word_znequ     = { NULL, "0<>",    do_znequ,     NULL };
+Word word_zlt       = { NULL, "0<",     do_zlt,       NULL };
+Word word_zgt       = { NULL, "0>",     do_zgt,       NULL };
+Word word_zle       = { NULL, "0<=",    do_zle,       NULL };
+Word word_zge       = { NULL, "0>=",    do_zge,       NULL };
+Word word_and       = { NULL, "AND",    do_and,       NULL };
+Word word_or        = { NULL, "OR",     do_or,        NULL };
+Word word_xor       = { NULL, "XOR",    do_xor,       NULL };
+Word word_invert    = { NULL, "INVERT", do_invert,    NULL };
+Word word_exit      = { NULL, "EXIT",   do_exit,      NULL };
+Word word_lit       = { NULL, "LIT",    do_lit,       NULL };
+Word word_store     = { NULL, "!",      do_store,     NULL };
+Word word_fetch     = { NULL, "@",      do_fetch,     NULL };
+Word word_addstore  = { NULL, "+!",     do_addstore,  NULL };
+Word word_substore  = { NULL, "-!",     do_substore,  NULL };
+Word word_storebyte = { NULL, "C!",     do_storebyte, NULL };
+Word word_fetchbyte = { NULL, "C@",     do_fetchbyte, NULL };
+Word word_ccopy     = { NULL, "C@C!",   do_ccopy,     NULL };
+Word word_cmove     = { NULL, "CMOVE",  do_cmove,     NULL };
+
 Word word_dot     = { NULL, ".",      do_dot,     NULL };
 
 Word *double_body[] = { &word_dup, &word_add, &word_exit };
@@ -842,6 +913,98 @@ int main(void)
     assert(pop() == -100);
     assert(save == sp);    
 #endif
+
+    add_word(&word_store);
+#if DEBUG
+    Cell testbuff1[1] = {0};
+    push(1000);
+    push((Cell)testbuff1);
+    interpret("!");
+    assert(testbuff1[0] == 1000);
+    assert(save == sp);
+#endif
+
+    add_word(&word_fetch);
+#if DEBUG
+    push((Cell)testbuff1);
+    interpret("@");
+    assert(pop() == 1000);
+    assert(save == sp);
+#endif
+
+    add_word(&word_addstore);
+#if DEBUG
+    push(1);
+    push((Cell)testbuff1);
+    interpret("+!");
+    assert(testbuff1[0] == 1001);
+    assert(save == sp);
+#endif
+
+    add_word(&word_substore);
+#if DEBUG
+    push(2);
+    push((Cell)testbuff1);
+    interpret("-!");
+    assert(testbuff1[0] == 999);
+    assert(save == sp);
+#endif
+
+    add_word(&word_storebyte);
+#if DEBUG
+    char testbuff2[10] = "abcdefghi";
+    char testbuff3[10] = "ABCDEFGHI";
+    push('x');
+    push((Cell)testbuff2);
+    interpret("C!");
+    assert(testbuff2[0] == 'x');
+    assert(testbuff2[1] == 'b');
+    assert(save == sp);
+#endif
+
+    add_word(&word_fetchbyte);
+#if DEBUG
+    push((Cell)testbuff2);
+    interpret("C@");
+    assert(pop() == 'x');
+    assert(save == sp);
+#endif
+
+    add_word(&word_ccopy);
+#if DEBUG
+    push((Cell)testbuff3); // src
+    push((Cell)testbuff2); // dst
+    assert(testbuff2[0] == 'x');
+    assert(testbuff2[1] == 'b');
+    assert(testbuff3[0] == 'A');
+    assert(testbuff3[1] == 'B');
+    interpret("C@C!");
+    assert(testbuff2[0] == 'A');
+    assert(testbuff2[1] == 'b');
+    assert(testbuff3[0] == 'A');
+    assert(testbuff3[1] == 'B');
+    interpret("C@C!");
+    assert(testbuff2[0] == 'A');
+    assert(testbuff2[1] == 'B');
+    assert(testbuff2[2] == 'c');
+    assert(testbuff3[0] == 'A');
+    assert(testbuff3[1] == 'B');
+    assert(testbuff3[2] == 'C');
+    pop();
+    pop();
+    assert(save == sp);
+#endif
+
+    add_word(&word_cmove);
+#if DEBUG
+    push((Cell)testbuff3); // src
+    push((Cell)testbuff2); // dst
+    push(5); // length
+    interpret("CMOVE");
+    assert(strcmp("ABCDEfghi",testbuff2) == 0);
+    assert(save == sp);
+#endif
+
 
     add_word(&word_exit);
     add_word(&word_double);
