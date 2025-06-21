@@ -268,28 +268,33 @@ void do_zge(void) {
     push (b >= 0);
 }
 
-/*
+void do_and(void) {
+    // bitwise AND
+    Cell a = pop();
+    sp[0] &= a;
+}
 
-	defcode "AND",3,,AND	// bitwise AND
-	pop %eax
-	andl %eax,(%esp)
-	NEXT
+void do_or(void) {
+    // bitwise OR
+    Cell a = pop();
+    sp[0] |= a;
+}
 
-	defcode "OR",2,,OR	// bitwise OR
-	pop %eax
-	orl %eax,(%esp)
-	NEXT
+void do_xor(void) {
+    // bitwise XOR
+    Cell a = pop();
+    sp[0] ^= a;
+}
 
-	defcode "XOR",3,,XOR	// bitwise XOR
-	pop %eax
-	xorl %eax,(%esp)
-	NEXT
-
-	defcode "INVERT",6,,INVERT // this is the FORTH bitwise "NOT" function (cf. NEGATE and NOT)
-	notl (%esp)
-	NEXT
-
-*/
+// TODO anything that manipulates the stack directly instead of abstracting over push/pop
+// is also going to need to have bounds checking added anyway
+// so we may just want to not do that
+// We could potentially have fast and slow versions
+// You could have words that are verified to use fast versions
+void do_invert(void) {
+    // this is the FORTH bitwise "NOT" function (cf. NEGATE and NOT)
+    sp[0] = ~sp[0];
+}
 
 
 void docol(void) {
@@ -298,45 +303,49 @@ void docol(void) {
     ip = (Cell *)current_word->params; // ip is Cell *. current_word is Word *. params is... void *!
 }
 
-//                 link  name    code     params (e.g.docol code body)
-Word word_drop    = { NULL, "DROP",  do_drop,    NULL };
-Word word_swap    = { NULL, "SWAP",  do_swap,    NULL };
-Word word_dup     = { NULL, "DUP",   do_dup,     NULL };
-Word word_over    = { NULL, "OVER",  do_over,    NULL };
-Word word_rot     = { NULL, "ROT",   do_rot,     NULL };
-Word word_nrot    = { NULL, "-ROT",  do_nrot,    NULL };
-Word word_twodrop = { NULL, "2DROP", do_twodrop, NULL };
-Word word_twodup  = { NULL, "2DUP" , do_twodup,  NULL };
-Word word_twoswap = { NULL, "2SWAP", do_twoswap, NULL };
-Word word_qdup    = { NULL, "?DUP",  do_qdup,    NULL };
-Word word_incr    = { NULL, "1+",    do_incr,    NULL };
-Word word_decr    = { NULL, "1-",    do_decr,    NULL };
-Word word_incr8   = { NULL, "8+",    do_incr8,   NULL };
-Word word_decr8   = { NULL, "8-",    do_decr8,   NULL };
-Word word_add     = { NULL, "+",     do_add,     NULL };
-Word word_sub     = { NULL, "-",     do_sub,     NULL };
-Word word_mul     = { NULL, "*",     do_mul,     NULL };
-Word word_div     = { NULL, "/",     do_div,     NULL };
-Word word_mod     = { NULL, "%",     do_mod,     NULL };
-Word word_divmod  = { NULL, "/MOD",  do_divmod,  NULL };
-Word word_equ     = { NULL, "=",     do_equ,     NULL };
-Word word_nequ    = { NULL, "<>",    do_nequ,    NULL };
-Word word_lt      = { NULL, "<",     do_lt,      NULL };
-Word word_gt      = { NULL, ">",     do_gt,      NULL };
-Word word_le      = { NULL, "<=",    do_le,      NULL };
-Word word_ge      = { NULL, ">=",    do_ge,      NULL };
-Word word_zequ    = { NULL, "0=",    do_zequ,    NULL };
-Word word_znequ   = { NULL, "0<>",   do_znequ,   NULL };
-Word word_zlt     = { NULL, "0<",    do_zlt,     NULL };
-Word word_zgt     = { NULL, "0>",    do_zgt,     NULL };
-Word word_zle     = { NULL, "0<=",   do_zle,     NULL };
-Word word_zge     = { NULL, "0>=",   do_zge,     NULL };
+//                    link  name      code        params (e.g.docol code body)
+Word word_drop    = { NULL, "DROP",   do_drop,    NULL };
+Word word_swap    = { NULL, "SWAP",   do_swap,    NULL };
+Word word_dup     = { NULL, "DUP",    do_dup,     NULL };
+Word word_over    = { NULL, "OVER",   do_over,    NULL };
+Word word_rot     = { NULL, "ROT",    do_rot,     NULL };
+Word word_nrot    = { NULL, "-ROT",   do_nrot,    NULL };
+Word word_twodrop = { NULL, "2DROP",  do_twodrop, NULL };
+Word word_twodup  = { NULL, "2DUP" ,  do_twodup,  NULL };
+Word word_twoswap = { NULL, "2SWAP",  do_twoswap, NULL };
+Word word_qdup    = { NULL, "?DUP",   do_qdup,    NULL };
+Word word_incr    = { NULL, "1+",     do_incr,    NULL };
+Word word_decr    = { NULL, "1-",     do_decr,    NULL };
+Word word_incr8   = { NULL, "8+",     do_incr8,   NULL };
+Word word_decr8   = { NULL, "8-",     do_decr8,   NULL };
+Word word_add     = { NULL, "+",      do_add,     NULL };
+Word word_sub     = { NULL, "-",      do_sub,     NULL };
+Word word_mul     = { NULL, "*",      do_mul,     NULL };
+Word word_div     = { NULL, "/",      do_div,     NULL };
+Word word_mod     = { NULL, "%",      do_mod,     NULL };
+Word word_divmod  = { NULL, "/MOD",   do_divmod,  NULL };
+Word word_equ     = { NULL, "=",      do_equ,     NULL };
+Word word_nequ    = { NULL, "<>",     do_nequ,    NULL };
+Word word_lt      = { NULL, "<",      do_lt,      NULL };
+Word word_gt      = { NULL, ">",      do_gt,      NULL };
+Word word_le      = { NULL, "<=",     do_le,      NULL };
+Word word_ge      = { NULL, ">=",     do_ge,      NULL };
+Word word_zequ    = { NULL, "0=",     do_zequ,    NULL };
+Word word_znequ   = { NULL, "0<>",    do_znequ,   NULL };
+Word word_zlt     = { NULL, "0<",     do_zlt,     NULL };
+Word word_zgt     = { NULL, "0>",     do_zgt,     NULL };
+Word word_zle     = { NULL, "0<=",    do_zle,     NULL };
+Word word_zge     = { NULL, "0>=",    do_zge,     NULL };
+Word word_and     = { NULL, "AND",    do_and,     NULL };
+Word word_or      = { NULL, "OR",     do_or,      NULL };
+Word word_xor     = { NULL, "XOR",    do_xor,     NULL };
+Word word_invert  = { NULL, "INVERT", do_invert,  NULL };
 
-Word word_dot     = { NULL, ".",     do_dot,     NULL };
-Word word_exit    = { NULL, "EXIT",  do_exit,    NULL };
+Word word_dot     = { NULL, ".",      do_dot,     NULL };
+Word word_exit    = { NULL, "EXIT",   do_exit,    NULL };
 
 Word *double_body[] = { &word_dup, &word_add, &word_exit };
-Word word_double = { NULL, "DOUBLE", docol, double_body };
+Word word_double =    { NULL, "DOUBLE",    docol, double_body };
 
 Word *quadruple_body[] = { &word_double, &word_double, &word_exit };
 Word word_quadruple = { NULL, "QUADRUPLE", docol, quadruple_body };
@@ -793,6 +802,34 @@ int main(void)
     interpret("5 0>=");
     assert(pop() == 1);
     assert(save == sp);
+#endif
+
+    add_word(&word_and);
+#if DEBUG
+    interpret("4 6 AND");
+    assert(pop() == 4);
+    assert(save == sp);
+#endif
+
+    add_word(&word_or);
+#if DEBUG
+    interpret("4 6 OR");
+    assert(pop() == 6);
+    assert(save == sp);
+#endif
+
+    add_word(&word_xor);
+#if DEBUG
+    interpret("4 6 XOR");
+    assert(pop() == 2);
+    assert(save == sp);
+#endif
+
+    add_word(&word_invert);
+#if DEBUG
+    interpret("99 INVERT");
+    assert(pop() == -100);
+    assert(save == sp);    
 #endif
 
     add_word(&word_exit);

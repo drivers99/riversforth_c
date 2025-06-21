@@ -48,10 +48,10 @@ Checklist of words to be implemented.
 - [x] 0>
 - [x] 0<=
 - [x] 0>=
-- [ ] AND
-- [ ] OR
-- [ ] XOR
-- [ ] INVERT
+- [x] AND
+- [x] OR
+- [x] XOR
+- [x] INVERT
 
 ### More FORTH primitives
 
