@@ -86,11 +86,11 @@ Checklist of words to be implemented.
 
 ### Return stack words
 
-- [ ] >R
-- [ ] R>
-- [ ] RSP@
-- [ ] RSP!
-- [ ] RDROP
+- [x] >R
+- [x] R>
+- [x] RSP@
+- [x] RSP!
+- [x] RDROP
 
 ### Parameter (data) stack words
 

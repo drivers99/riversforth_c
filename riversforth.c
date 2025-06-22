@@ -28,7 +28,8 @@ struct Word {
 // made these powers of 2 for no real reason
 //#define DATA_STACK_SIZE 1024
 #define DATA_STACK_SIZE 100 // debug easier
-#define RETURN_STACK_SIZE 1024
+//#define RETURN_STACK_SIZE 1024
+#define RETURN_STACK_SIZE 100 // debug easier
 #define DICTIONARY_SIZE 16384
 #define TOKEN_SIZE 64
 
@@ -504,6 +505,44 @@ Word word_do_con_r0       = { NULL, "R0",       do_con_r0,      NULL };
 Word word_do_con_docol    = { NULL, "DOCOL",    do_con_docol,   NULL };
 Word word_do_con_f_immed  = { NULL, "F_IMMED",  do_con_f_immed, NULL };
 Word word_do_con_f_hidden = { NULL, "F_HIDDEN", do_con_f_hidden, NULL };
+
+// return stack related words
+
+void do_tor(void) {
+    // >R
+    Cell a = pop();
+    --rp;
+    *rp = a;
+}
+
+void do_fromr(void) {
+    // R>
+    Cell a = rp[0];
+    rp++;
+    push(a);
+}
+
+void do_rspfetch(void) {
+    // RSP@
+    push((Cell)rp);
+}
+
+void do_rspstore(void) {
+    // RSP!
+    rp = (Cell *)pop();
+}
+
+void do_rdrop(void) {
+    // RDROP
+    rp++;
+}
+
+Word word_tor      = { NULL, ">R",    do_tor,      NULL };
+Word word_fromr    = { NULL, "R>",    do_fromr,    NULL };
+Word word_rspfetch = { NULL, "RSP@",  do_rspfetch, NULL };
+Word word_rspstore = { NULL, "RSP!",  do_rspstore, NULL };
+Word word_rdrop    = { NULL, "RDROP", do_rdrop,    NULL };
+
 
 // Note: built in words don't live in the actual dictionary / user data space
 void add_word(Word *w) {
@@ -1139,6 +1178,30 @@ int main(void)
     assert(pop() == (Cell)r0);
     assert(pop() == VERSION);
     assert(save == sp);
+#endif
+
+    add_word(&word_tor);
+    add_word(&word_fromr);
+    add_word(&word_rspfetch);
+    add_word(&word_rspstore);
+    add_word(&word_rdrop);
+#if DEBUG
+    Cell *save_rp = rp;
+    interpret("7 >R R>");
+    assert(pop() == 7);
+    assert(save == sp);
+    assert(save_rp == rp);
+    assert(save_rp == r0);
+    interpret("8 >R RDROP");
+    assert(save == sp);
+    assert(save_rp == rp);
+    assert(save_rp == r0);
+    interpret("RSP@");
+    assert(pop() == (Cell)rp);
+    // not sure how to fully test things here right now
+    assert(save == sp);
+    assert(save_rp == rp);
+    assert(save_rp == r0);
 #endif
 
     char line[256];
