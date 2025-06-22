@@ -94,8 +94,8 @@ Checklist of words to be implemented.
 
 ### Parameter (data) stack words
 
-- [ ] DSP@
-- [ ] DSP!
+- [x] DSP@
+- [x] DSP!
 
 ### Input and Output
 

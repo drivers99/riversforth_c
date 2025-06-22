@@ -543,6 +543,20 @@ Word word_rspfetch = { NULL, "RSP@",  do_rspfetch, NULL };
 Word word_rspstore = { NULL, "RSP!",  do_rspstore, NULL };
 Word word_rdrop    = { NULL, "RDROP", do_rdrop,    NULL };
 
+// data stack related words
+
+void do_dspfetch(void) {
+    // DSP@
+    push((Cell)sp);
+}
+
+void do_dspstore(void) {
+    // DSP!
+    sp = (Cell *)pop();
+}
+
+Word word_dspfetch = { NULL, "DSP@",  do_dspfetch, NULL };
+Word word_dspstore = { NULL, "DSP!",  do_dspstore, NULL };
 
 // Note: built in words don't live in the actual dictionary / user data space
 void add_word(Word *w) {
@@ -1202,6 +1216,13 @@ int main(void)
     assert(save == sp);
     assert(save_rp == rp);
     assert(save_rp == r0);
+#endif
+
+    add_word(&word_dspfetch);
+    add_word(&word_dspstore);
+#if DEBUG
+    interpret("DSP@ 7 OVER 8 OVER 9 OVER DSP!");
+    assert(save == sp); // stack pointer should be restored due to DSP@ and DSP!
 #endif
 
     char line[256];
