@@ -99,10 +99,10 @@ Checklist of words to be implemented.
 
 ### Input and Output
 
-- [ ] KEY
-- [ ] EMIT
-- [ ] WORD (get_token C function does this currently)
-- [ ] NUMBER
+- [x] KEY
+- [x] EMIT
+- [x] WORD (get_token C function does this currently)
+- [x] NUMBER
 
 ### Dictionary, compiling primitives
 

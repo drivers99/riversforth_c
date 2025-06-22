@@ -32,6 +32,7 @@ struct Word {
 #define RETURN_STACK_SIZE 100 // debug easier
 #define DICTIONARY_SIZE 16384
 #define TOKEN_SIZE 64
+#define INPUT_BUFFER_SIZE 4096
 
 Cell data_stack[DATA_STACK_SIZE];
 Cell *sp = data_stack + DATA_STACK_SIZE; // grows down. C pointer arithmetic adds DATA_STACK_SIZE*sizeof(Cell)
@@ -433,35 +434,35 @@ Word word_quadruple = { NULL, "QUADRUPLE", docol, quadruple_body };
 Word *testlit_body[] = { &word_lit, (void *)21, &word_double, &word_exit };
 Word word_testlit =   { NULL, "TESTLIT",   docol, testlit_body };
 
-// built-in variables:
+// built-in variables. var needs to return the address of the variable, not the value!
 
 Cell state = 0;
 void do_var_state(void) {
     // Is the interpreter executing code (0) or compiling a word (non-zero)?
-    push(state);
+    push((Cell)&state);
 }
 
 void do_var_latest(void) {
     // Points to the latest (most recently defined) word in the dictionary.
-    push((Cell)latest);
+    push((Cell)&latest);
 }
 
 Cell *here = dictionary;
 void do_var_here(void) {
     // Points to the next free byte of memory.  When compiling, compiled words go here.
-    push((Cell)here);
+    push((Cell)&here);
 }
 
 Cell *s0; // initial value of sp
 void do_var_s0(void) {
     // Stores the address of the top of the parameter stack.
-    push((Cell)s0);
+    push((Cell)&s0);
 }
 
 Cell base = 10;
 void do_var_base(void) {
     // The current base for printing and reading numbers.
-    push(base);
+    push((Cell)&base);
 }
 
 Word word_var_state  = { NULL, "STATE",  do_var_state,  NULL };
@@ -557,6 +558,126 @@ void do_dspstore(void) {
 
 Word word_dspfetch = { NULL, "DSP@",  do_dspfetch, NULL };
 Word word_dspstore = { NULL, "DSP!",  do_dspstore, NULL };
+
+// input / output
+
+// we could probably just use getchar or something here instead
+// TODO try that out
+// moved to a function since it's also used by WORD
+char get_key(void) {
+    static char input_buffer[INPUT_BUFFER_SIZE];
+    static char currkey = 0;
+    static char bufftop = 0;
+
+    while (currkey >= bufftop) {
+        // refill buffer
+        if (!fgets(input_buffer, sizeof(input_buffer), stdin)) {
+            // stdin has closed
+            exit(0);
+        }
+        currkey = 0;
+        bufftop = strlen(input_buffer);
+    }
+    return input_buffer[currkey++];
+}
+
+void do_key(void) {
+    push(get_key());
+}
+
+void do_emit(void) {
+    putchar(pop());
+}
+
+char word_buffer[TOKEN_SIZE]; // TODO add bounds checking
+void do_word(void) {
+    int length = 0;
+    char c = get_key();
+    if (c == '\\') {
+        // start of comment, skip until after next newline
+        while (c != '\n') {
+            c = get_key();
+        }
+    }
+    // skip whitespace
+    // JonesForth only checks for space ' ' so I'm not sure how it's handling newlines
+    // it only seems to deal with it after comments
+    // but that's clearly not the case.
+    // Perhaps it will become clear later.
+    while (isspace(c)) {
+        c = get_key();
+    }
+    while (!isspace(c)) {
+        word_buffer[length++] = c;
+        c = get_key();
+    }
+    push((Cell)word_buffer);
+    push(length);
+}
+
+void do_number(void) {
+    // clearly C has functions to do this already
+    // we could just use that, at least for certain standard bases
+    int length = pop();
+    char *s = (char *)pop();
+    int unparsed = length;
+    int number = 0;
+    int negative = 0;
+
+    if (length == 0) {
+        // trying to parse a zero-length string is an error, but will return 0.
+        push(0);
+        push(1); // setting this to 1 to indicate an error. Not sure if this will cause a problem.
+        return;
+    }
+    for (int i = 0; i < length; i++) {
+        if (i == 0 && s[i] == '-') {
+            if (length == 1) {
+                // only "-" as a number is an error
+                push(0);
+                push(1); // unparsed non-zero indicates error
+                return;
+            }
+            negative = 1; // negative is true
+            unparsed--;
+            continue;
+        }
+        int digit = s[i];
+        // convert digit, regardless of base (up to base 36 anyway)
+        if (isdigit(digit)) { // 0 to 9
+            digit -= '0';
+        }
+        else if (digit >= 'A' && digit <= 'Z') {
+            digit -= 'A';
+            digit += 10;
+        }
+        else if (digit >= 'a' && digit <= 'z') {
+            digit -= 'a';
+            digit += 10;
+        }
+        // check if it fits within base
+        if (digit >= base) {
+            push(number);
+            push(unparsed);
+            return;
+        }
+        number *= base;
+        number += digit;
+        unparsed--;
+    }
+
+    if (negative) {
+        push(-number);
+    } else {
+        push(number);
+    }
+    push(unparsed);
+}
+
+Word word_key    = { NULL, "KEY",    do_key,    NULL };
+Word word_emit   = { NULL, "EMIT",   do_emit,   NULL };
+Word word_word   = { NULL, "WORD",   do_word,   NULL };
+Word word_number = { NULL, "NUMBER", do_number, NULL };
 
 // Note: built in words don't live in the actual dictionary / user data space
 void add_word(Word *w) {
@@ -1162,19 +1283,19 @@ int main(void)
     add_word(&word_var_s0);
     add_word(&word_var_base);
 #if DEBUG
-    interpret("state");
+    interpret("state @");
     assert(pop() == 0);
     assert(save == sp);
-    interpret("latest");
+    interpret("latest @");
     assert(pop() == (Cell)latest);
     assert(save == sp);
-    interpret("here");
+    interpret("here @");
     assert(pop() == (Cell)dictionary);
     assert(save == sp);
-    interpret("s0");
+    interpret("s0 @");
     assert(pop() == (Cell)s0);
     assert(save == s0); // note: also checking if save and s0 are the same
-    interpret("base");
+    interpret("base @");
     assert(pop() == 10);
     assert(save == sp);
 #endif
@@ -1224,6 +1345,14 @@ int main(void)
     interpret("DSP@ 7 OVER 8 OVER 9 OVER DSP!");
     assert(save == sp); // stack pointer should be restored due to DSP@ and DSP!
 #endif
+
+    add_word(&word_key);
+    add_word(&word_emit);
+    add_word(&word_word); // lol
+    // tested interactively
+
+    add_word(&word_number);
+    // TODO add automated testing after interpret etc is converted to use WORD/KEY/NUMBER
 
     char line[256];
 
