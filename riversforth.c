@@ -1536,17 +1536,3 @@ int main(void)
 
     return 0;
 }
-
-
-// problem... if we use interpret to interpret one line
-// then it will do fgets to get more input
-// but we don't want to do it in that case
-// so maybe we need to have a variable (ready_for_input)
-// it won't get more input as long as that's not set yet
-// it will know to just... return when in the input is complete
-
-// so... how do we know when the input is complete?
-// when currkey >= bufftop 
-// but then... what do we do in that case?
-
-// one option would be to turn off debugging :(

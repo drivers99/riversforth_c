@@ -133,7 +133,7 @@ Checklist of words to be implemented.
 ### QUIT/INTERPRET
 
 - [ ] QUIT
-- [ ] INTERPRET (written in C currently)
+- [ ] INTERPRET
 
 ### Odds and ends
 
