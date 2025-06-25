@@ -13,6 +13,7 @@ typedef void (*CodeFn)(void);
 typedef struct Word Word;
 struct Word {
     Word *link;
+    Cell flags;
     const char *name;
     CodeFn code;
     void *params;
@@ -45,7 +46,8 @@ Cell *ip = NULL; // address of next "instruction"
 void push(Cell x) { *--sp = x; } // TODO add bounds checking
 Cell pop(void) { return *sp++; } // TODO add bounds checking
 
-Cell dictionary[DICTIONARY_SIZE];
+// TODO distinguish dictionary and user data space, this is actually user data space
+char dictionary[DICTIONARY_SIZE];
 Word *latest = NULL; // head of dictionary linked list
 Word *current_word = NULL;
 
@@ -375,64 +377,64 @@ void docol(void) {
     ip = (Cell *)current_word->params; // ip is Cell *. current_word is Word *. params is... void *!
 }
 
-//                      link  name      code          params (e.g.docol code body)
-Word word_drop      = { NULL, "DROP",   do_drop,      NULL };
-Word word_swap      = { NULL, "SWAP",   do_swap,      NULL };
-Word word_dup       = { NULL, "DUP",    do_dup,       NULL };
-Word word_over      = { NULL, "OVER",   do_over,      NULL };
-Word word_rot       = { NULL, "ROT",    do_rot,       NULL };
-Word word_nrot      = { NULL, "-ROT",   do_nrot,      NULL };
-Word word_twodrop   = { NULL, "2DROP",  do_twodrop,   NULL };
-Word word_twodup    = { NULL, "2DUP" ,  do_twodup,    NULL };
-Word word_twoswap   = { NULL, "2SWAP",  do_twoswap,   NULL };
-Word word_qdup      = { NULL, "?DUP",   do_qdup,      NULL };
-Word word_incr      = { NULL, "1+",     do_incr,      NULL };
-Word word_decr      = { NULL, "1-",     do_decr,      NULL };
-Word word_incr8     = { NULL, "8+",     do_incr8,     NULL };
-Word word_decr8     = { NULL, "8-",     do_decr8,     NULL };
-Word word_add       = { NULL, "+",      do_add,       NULL };
-Word word_sub       = { NULL, "-",      do_sub,       NULL };
-Word word_mul       = { NULL, "*",      do_mul,       NULL };
-Word word_div       = { NULL, "/",      do_div,       NULL };
-Word word_mod       = { NULL, "%",      do_mod,       NULL };
-Word word_divmod    = { NULL, "/MOD",   do_divmod,    NULL };
-Word word_equ       = { NULL, "=",      do_equ,       NULL };
-Word word_nequ      = { NULL, "<>",     do_nequ,      NULL };
-Word word_lt        = { NULL, "<",      do_lt,        NULL };
-Word word_gt        = { NULL, ">",      do_gt,        NULL };
-Word word_le        = { NULL, "<=",     do_le,        NULL };
-Word word_ge        = { NULL, ">=",     do_ge,        NULL };
-Word word_zequ      = { NULL, "0=",     do_zequ,      NULL };
-Word word_znequ     = { NULL, "0<>",    do_znequ,     NULL };
-Word word_zlt       = { NULL, "0<",     do_zlt,       NULL };
-Word word_zgt       = { NULL, "0>",     do_zgt,       NULL };
-Word word_zle       = { NULL, "0<=",    do_zle,       NULL };
-Word word_zge       = { NULL, "0>=",    do_zge,       NULL };
-Word word_and       = { NULL, "AND",    do_and,       NULL };
-Word word_or        = { NULL, "OR",     do_or,        NULL };
-Word word_xor       = { NULL, "XOR",    do_xor,       NULL };
-Word word_invert    = { NULL, "INVERT", do_invert,    NULL };
-Word word_exit      = { NULL, "EXIT",   do_exit,      NULL };
-Word word_lit       = { NULL, "LIT",    do_lit,       NULL };
-Word word_store     = { NULL, "!",      do_store,     NULL };
-Word word_fetch     = { NULL, "@",      do_fetch,     NULL };
-Word word_addstore  = { NULL, "+!",     do_addstore,  NULL };
-Word word_substore  = { NULL, "-!",     do_substore,  NULL };
-Word word_storebyte = { NULL, "C!",     do_storebyte, NULL };
-Word word_fetchbyte = { NULL, "C@",     do_fetchbyte, NULL };
-Word word_ccopy     = { NULL, "C@C!",   do_ccopy,     NULL };
-Word word_cmove     = { NULL, "CMOVE",  do_cmove,     NULL };
+//                      link  fl name      code          params (e.g.docol code body)
+Word word_drop      = { NULL, 0, "DROP",   do_drop,      NULL };
+Word word_swap      = { NULL, 0, "SWAP",   do_swap,      NULL };
+Word word_dup       = { NULL, 0, "DUP",    do_dup,       NULL };
+Word word_over      = { NULL, 0, "OVER",   do_over,      NULL };
+Word word_rot       = { NULL, 0, "ROT",    do_rot,       NULL };
+Word word_nrot      = { NULL, 0, "-ROT",   do_nrot,      NULL };
+Word word_twodrop   = { NULL, 0, "2DROP",  do_twodrop,   NULL };
+Word word_twodup    = { NULL, 0, "2DUP" ,  do_twodup,    NULL };
+Word word_twoswap   = { NULL, 0, "2SWAP",  do_twoswap,   NULL };
+Word word_qdup      = { NULL, 0, "?DUP",   do_qdup,      NULL };
+Word word_incr      = { NULL, 0, "1+",     do_incr,      NULL };
+Word word_decr      = { NULL, 0, "1-",     do_decr,      NULL };
+Word word_incr8     = { NULL, 0, "8+",     do_incr8,     NULL };
+Word word_decr8     = { NULL, 0, "8-",     do_decr8,     NULL };
+Word word_add       = { NULL, 0, "+",      do_add,       NULL };
+Word word_sub       = { NULL, 0, "-",      do_sub,       NULL };
+Word word_mul       = { NULL, 0, "*",      do_mul,       NULL };
+Word word_div       = { NULL, 0, "/",      do_div,       NULL };
+Word word_mod       = { NULL, 0, "%",      do_mod,       NULL };
+Word word_divmod    = { NULL, 0, "/MOD",   do_divmod,    NULL };
+Word word_equ       = { NULL, 0, "=",      do_equ,       NULL };
+Word word_nequ      = { NULL, 0, "<>",     do_nequ,      NULL };
+Word word_lt        = { NULL, 0, "<",      do_lt,        NULL };
+Word word_gt        = { NULL, 0, ">",      do_gt,        NULL };
+Word word_le        = { NULL, 0, "<=",     do_le,        NULL };
+Word word_ge        = { NULL, 0, ">=",     do_ge,        NULL };
+Word word_zequ      = { NULL, 0, "0=",     do_zequ,      NULL };
+Word word_znequ     = { NULL, 0, "0<>",    do_znequ,     NULL };
+Word word_zlt       = { NULL, 0, "0<",     do_zlt,       NULL };
+Word word_zgt       = { NULL, 0, "0>",     do_zgt,       NULL };
+Word word_zle       = { NULL, 0, "0<=",    do_zle,       NULL };
+Word word_zge       = { NULL, 0, "0>=",    do_zge,       NULL };
+Word word_and       = { NULL, 0, "AND",    do_and,       NULL };
+Word word_or        = { NULL, 0, "OR",     do_or,        NULL };
+Word word_xor       = { NULL, 0, "XOR",    do_xor,       NULL };
+Word word_invert    = { NULL, 0, "INVERT", do_invert,    NULL };
+Word word_exit      = { NULL, 0, "EXIT",   do_exit,      NULL };
+Word word_lit       = { NULL, 0, "LIT",    do_lit,       NULL };
+Word word_store     = { NULL, 0, "!",      do_store,     NULL };
+Word word_fetch     = { NULL, 0, "@",      do_fetch,     NULL };
+Word word_addstore  = { NULL, 0, "+!",     do_addstore,  NULL };
+Word word_substore  = { NULL, 0, "-!",     do_substore,  NULL };
+Word word_storebyte = { NULL, 0, "C!",     do_storebyte, NULL };
+Word word_fetchbyte = { NULL, 0, "C@",     do_fetchbyte, NULL };
+Word word_ccopy     = { NULL, 0, "C@C!",   do_ccopy,     NULL };
+Word word_cmove     = { NULL, 0, "CMOVE",  do_cmove,     NULL };
 
-Word word_dot     = { NULL, ".",      do_dot,     NULL };
+Word word_dot     = { NULL, 0, ".",      do_dot,     NULL };
 
 Word *double_body[] = { &word_dup, &word_add, &word_exit };
-Word word_double =    { NULL, "DOUBLE",    docol, double_body };
+Word word_double =    { NULL, 0, "DOUBLE",    docol, double_body };
 
 Word *quadruple_body[] = { &word_double, &word_double, &word_exit };
-Word word_quadruple = { NULL, "QUADRUPLE", docol, quadruple_body };
+Word word_quadruple = { NULL, 0, "QUADRUPLE", docol, quadruple_body };
 
 Word *testlit_body[] = { &word_lit, (void *)21, &word_double, &word_exit };
-Word word_testlit =   { NULL, "TESTLIT",   docol, testlit_body };
+Word word_testlit =   { NULL, 0, "TESTLIT",   docol, testlit_body };
 
 // built-in variables. var needs to return the address of the variable, not the value!
 
@@ -447,7 +449,7 @@ void do_var_latest(void) {
     push((Cell)&latest);
 }
 
-Cell *here = dictionary;
+void *here = dictionary;
 void do_var_here(void) {
     // Points to the next free byte of memory.  When compiling, compiled words go here.
     push((Cell)&here);
@@ -465,11 +467,11 @@ void do_var_base(void) {
     push((Cell)&base);
 }
 
-Word word_var_state  = { NULL, "STATE",  do_var_state,  NULL };
-Word word_var_latest = { NULL, "LATEST", do_var_latest, NULL };
-Word word_var_here   = { NULL, "HERE",   do_var_here,   NULL };
-Word word_var_s0     = { NULL, "S0",     do_var_s0,     NULL };
-Word word_var_base   = { NULL, "BASE",   do_var_base,   NULL };
+Word word_var_state  = { NULL, 0, "STATE",  do_var_state,  NULL };
+Word word_var_latest = { NULL, 0, "LATEST", do_var_latest, NULL };
+Word word_var_here   = { NULL, 0, "HERE",   do_var_here,   NULL };
+Word word_var_s0     = { NULL, 0, "S0",     do_var_s0,     NULL };
+Word word_var_base   = { NULL, 0, "BASE",   do_var_base,   NULL };
 
 // built-in constants:
 
@@ -489,23 +491,23 @@ void do_con_docol(void) {
     push((Cell)docol);
 }
 
-Cell F_IMMED = 1;
+#define F_IMMED 1
 void do_con_f_immed(void) {
     // F_IMMED, The IMMEDIATE flag's actual value.
     push(F_IMMED);
 }
 
-Cell F_HIDDEN = 2;
+#define F_HIDDEN 2
 void do_con_f_hidden(void) {
     // F_HIDDEN, The HIDDEN flag's actual value.
     push(F_HIDDEN);
 }
 
-Word word_do_con_version  = { NULL, "VERSION",  do_con_version, NULL };
-Word word_do_con_r0       = { NULL, "R0",       do_con_r0,      NULL };
-Word word_do_con_docol    = { NULL, "DOCOL",    do_con_docol,   NULL };
-Word word_do_con_f_immed  = { NULL, "F_IMMED",  do_con_f_immed, NULL };
-Word word_do_con_f_hidden = { NULL, "F_HIDDEN", do_con_f_hidden, NULL };
+Word word_do_con_version  = { NULL, 0, "VERSION",  do_con_version, NULL };
+Word word_do_con_r0       = { NULL, 0, "R0",       do_con_r0,      NULL };
+Word word_do_con_docol    = { NULL, 0, "DOCOL",    do_con_docol,   NULL };
+Word word_do_con_f_immed  = { NULL, 0, "F_IMMED",  do_con_f_immed, NULL };
+Word word_do_con_f_hidden = { NULL, 0, "F_HIDDEN", do_con_f_hidden, NULL };
 
 // return stack related words
 
@@ -538,11 +540,11 @@ void do_rdrop(void) {
     rp++;
 }
 
-Word word_tor      = { NULL, ">R",    do_tor,      NULL };
-Word word_fromr    = { NULL, "R>",    do_fromr,    NULL };
-Word word_rspfetch = { NULL, "RSP@",  do_rspfetch, NULL };
-Word word_rspstore = { NULL, "RSP!",  do_rspstore, NULL };
-Word word_rdrop    = { NULL, "RDROP", do_rdrop,    NULL };
+Word word_tor      = { NULL, 0, ">R",    do_tor,      NULL };
+Word word_fromr    = { NULL, 0, "R>",    do_fromr,    NULL };
+Word word_rspfetch = { NULL, 0, "RSP@",  do_rspfetch, NULL };
+Word word_rspstore = { NULL, 0, "RSP!",  do_rspstore, NULL };
+Word word_rdrop    = { NULL, 0, "RDROP", do_rdrop,    NULL };
 
 // data stack related words
 
@@ -556,19 +558,18 @@ void do_dspstore(void) {
     sp = (Cell *)pop();
 }
 
-Word word_dspfetch = { NULL, "DSP@",  do_dspfetch, NULL };
-Word word_dspstore = { NULL, "DSP!",  do_dspstore, NULL };
+Word word_dspfetch = { NULL, 0, "DSP@",  do_dspfetch, NULL };
+Word word_dspstore = { NULL, 0, "DSP!",  do_dspstore, NULL };
 
 // input / output
 
 // we could probably just use getchar or something here instead
 // TODO try that out
 // moved to a function since it's also used by WORD
+char input_buffer[INPUT_BUFFER_SIZE];
+char currkey = 0;
+char bufftop = 0;
 char get_key(void) {
-    static char input_buffer[INPUT_BUFFER_SIZE];
-    static char currkey = 0;
-    static char bufftop = 0;
-
     while (currkey >= bufftop) {
         // refill buffer
         if (!fgets(input_buffer, sizeof(input_buffer), stdin)) {
@@ -611,6 +612,7 @@ void do_word(void) {
         word_buffer[length++] = c;
         c = get_key();
     }
+    word_buffer[length] = '\0';
     push((Cell)word_buffer);
     push(length);
 }
@@ -674,10 +676,108 @@ void do_number(void) {
     push(unparsed);
 }
 
-Word word_key    = { NULL, "KEY",    do_key,    NULL };
-Word word_emit   = { NULL, "EMIT",   do_emit,   NULL };
-Word word_word   = { NULL, "WORD",   do_word,   NULL };
-Word word_number = { NULL, "NUMBER", do_number, NULL };
+Word word_key    = { NULL, 0, "KEY",    do_key,    NULL };
+Word word_emit   = { NULL, 0, "EMIT",   do_emit,   NULL };
+Word word_word   = { NULL, 0, "WORD",   do_word,   NULL };
+Word word_number = { NULL, 0, "NUMBER", do_number, NULL };
+
+void do_find(void) {
+    int length = pop(); // not used, we use a struct with a pointer to a null terminated name
+    char *name = (char *)pop();
+    for (Word *w = latest; w != NULL; w = w->link) {
+        if (strcasecmp(w->name, name) == 0 && !(w->flags & F_HIDDEN)) {
+            push((Cell)w);
+            return;
+        }
+    }
+    push((Cell)NULL);
+    return;
+}
+
+void do_tcfa(void) {
+    // >CFA
+    Word *w = (Word *)pop();
+    push((Cell)w->code); // CodeFn code in Word struct (the function pointer itself)
+}
+
+void do_tdfa(void) {
+    // >DFA
+    Word *w = (Word *)pop();
+    push((Cell)w->params); // void *params in Word struct (pointer to a code body outside the struct)
+}
+
+void do_create(void) {
+    int length = pop();
+    char *name = (char *)pop();
+	// Link pointer.
+    Word *new_word = (Word *)here;
+    here += sizeof(Word);
+    new_word->link = latest;
+    latest = new_word;
+    new_word->flags = 0;
+    new_word->name = here;
+    strncpy((char *)here, name, length);
+    here += length + 1;
+    new_word->code = docol;
+    new_word->params = here; // it is expected compilation will come next
+}
+
+void do_comma(void) {
+    *((Cell *)here) = (Cell)pop();
+    here += sizeof(Cell);
+}
+
+void do_lbrac(void) {
+    // [
+    state = 0; // immediate mode
+}
+
+void do_rbrac(void) {
+    // ]
+    state =1; // compile mode
+}
+
+void do_immediate(void) {
+    latest->flags ^= F_IMMED; // toggle the immediate bit
+}
+
+void do_hidden(void) {
+    latest->flags ^= F_HIDDEN; // toggle the hidden bit
+}
+
+Word word_find      = { NULL, 0,       "FIND",      do_find,      NULL };
+Word word_tcfa      = { NULL, 0,       ">CFA",      do_tcfa,      NULL };
+Word word_tdfa      = { NULL, 0,       ">DFA",      do_tdfa,      NULL };
+Word word_create    = { NULL, 0,       "CREATE",    do_create,    NULL };
+Word word_comma     = { NULL, 0,       "COMMA",     do_comma,     NULL };
+Word word_lbrac     = { NULL, F_IMMED, "[",         do_lbrac,     NULL };
+Word word_rbrac     = { NULL, 0,       "]",         do_rbrac,     NULL };
+Word word_immediate = { NULL, F_IMMED, "IMMEDIATE", do_immediate, NULL };
+Word word_hidden    = { NULL, 0,       "HIDDEN",    do_hidden,    NULL };
+
+Word *colon_body[] = {
+    &word_word, // Get the name of the new word
+    &word_create, // CREATE the dictionary entry / header
+    &word_var_latest, &word_fetch, &word_hidden, // Make the word hidden.
+    &word_rbrac, // Go into compile mode.
+    &word_exit // Return from the function.
+};
+Word word_colon  = { NULL, 0, ":", docol, colon_body };
+
+Word *hide_body[] = { &word_word, &word_find, &word_hidden, &word_exit };
+Word word_hide = { NULL, 0, "HIDE", docol, hide_body };
+
+Word *semicolon_body[] = {
+    &word_lit, &word_exit, &word_comma, // Append EXIT (so the word will return).
+    &word_var_latest, &word_fetch, &word_hidden, // Toggle hidden flag -- unhide the word.
+    &word_lbrac, // Go back to IMMEDIATE mode.
+    &word_exit // Return from the function.
+};
+Word word_semicolon = { NULL, F_IMMED, ";", docol, semicolon_body };
+// !!!! TODO semicolon should have set the params...
+// I guess params should just automatically point to where the params will go
+// but then we probably don't need a pointer at all then
+// create should set it then
 
 // Note: built in words don't live in the actual dictionary / user data space
 void add_word(Word *w) {
@@ -729,32 +829,69 @@ char *get_token(char **input_ptr) {
 // TODO I think if we finish converting JonesForth then
 // interpret will run in Forth when you initially run QUIT
 // instead of having this C function (TBD)
-void interpret(char *line) {
-    char *ptr = line;
+// Converted this function to use WORD and work like it does in JonesForth
+// TODO make this a word as well (INTERPRET)
 
-    while (1) {
-        char *tok = get_token(&ptr);
-        if (*tok == '\0') break;
+int words_remain(void) {
+    // determine if there are any words left in the input_buffer
+    // to prevent do_interpret from trying to get more words unnecessarily
 
-        Word *w = find(tok);
+    int offset = currkey;
+    while (offset < bufftop) {
+        if (!isspace(input_buffer[offset])) {
+            return(1);
+        }
+        offset++;
+    }
+    return(0);
+}
+
+void do_interpret(void) {
+    while (words_remain()) {
+        do_word();
+        do_find();
+        Word *w = (Word *)pop();
         if (w) {
-            if (w->code == docol) {
-                run(w);
+            if ((w->flags & F_IMMED) || state == 0) {
+                // run it now
+                if (w->code == docol) {
+                    run(w);
+                } else {
+                    current_word = w;
+                    w->code();
+                }
             } else {
-                current_word = w;
-                w->code();
+                push((Cell)w);
+                do_comma();
             }
         } else {
             // Not found — try to parse number
-            char *end;
-            long val = strtol(tok, &end, 10);
-            if (*end == '\0') {
-                push(val);
+            push((Cell)word_buffer);
+            push(strlen(word_buffer));
+            do_number();
+            int unparsed = pop();
+            int number = pop();
+            if (unparsed == 0) {
+                if (state == 0) {
+                    push(number);
+                } else {
+                    push((Cell)&word_lit);
+                    do_comma();
+                    push(number);
+                    do_comma();
+                }
             } else {
-                printf("Unknown word: %s\n", tok);
+                printf("Unknown word: %s\n", word_buffer);
             }
         }
     }
+}
+
+void interpret(char *s) {
+    strncpy(input_buffer, s, INPUT_BUFFER_SIZE);
+    currkey = 0;
+    bufftop = strlen(input_buffer);
+    do_interpret();
 }
 
 int main(void)
@@ -770,21 +907,21 @@ int main(void)
     add_word(&word_drop);
 #if DEBUG
     Cell *save = sp;
-    interpret("1 2 drop");
+    interpret("1 2 drop ");
     assert(pop() == 1);
     assert(save == sp);
 #endif
 
     add_word(&word_swap);
 #if DEBUG
-    interpret("2 1 swap drop");
+    interpret("2 1 swap drop ");
     assert(pop() == 1);
     assert(save == sp);
 #endif
 
     add_word(&word_dup);
 #if DEBUG
-    interpret("42 dup");
+    interpret("42 dup ");
     assert(pop() == 42);
     assert(pop() == 42);
     assert(save == sp);
@@ -792,7 +929,7 @@ int main(void)
 
     add_word(&word_over);
 #if DEBUG
-    interpret("10 11 over");
+    interpret("10 11 over ");
     assert(pop() == 10);
     assert(pop() == 11);
     assert(pop() == 10);
@@ -801,7 +938,7 @@ int main(void)
 
     add_word(&word_rot);
 #if DEBUG
-    interpret("1 2 3 rot");
+    interpret("1 2 3 rot ");
     assert(pop() == 1);
     assert(pop() == 3);
     assert(pop() == 2);
@@ -810,7 +947,7 @@ int main(void)
 
     add_word(&word_nrot);
 #if DEBUG
-    interpret("1 2 3 -rot");
+    interpret("1 2 3 -rot ");
     assert(pop() == 2);
     assert(pop() == 1);
     assert(pop() == 3);
@@ -819,14 +956,14 @@ int main(void)
 
     add_word(&word_twodrop);
 #if DEBUG
-    interpret("1 2 3 2drop");
+    interpret("1 2 3 2drop ");
     assert(pop() == 1);
     assert(save == sp);
 #endif
 
     add_word(&word_twodup);
 #if DEBUG
-    interpret("5 6 2dup");
+    interpret("5 6 2dup ");
     assert(pop() == 6);
     assert(pop() == 5);
     assert(pop() == 6);
@@ -836,7 +973,7 @@ int main(void)
 
     add_word(&word_twoswap);
 #if DEBUG
-    interpret("5 6 7 8 2swap");
+    interpret("5 6 7 8 2swap ");
     assert(pop() == 6);
     assert(pop() == 5);
     assert(pop() == 8);
@@ -846,11 +983,11 @@ int main(void)
 
     add_word(&word_qdup);
 #if DEBUG
-    interpret("0 ?DUP");
+    interpret("0 ?DUP ");
     assert(pop() == 0);
     assert(save == sp);
 
-    interpret("1 ?DUP");
+    interpret("1 ?DUP ");
     assert(pop() == 1);
     assert(pop() == 1);
     assert(save == sp);
@@ -858,83 +995,83 @@ int main(void)
 
     add_word(&word_incr);
 #if DEBUG
-    interpret("5 1+");
+    interpret("5 1+ ");
     assert(pop() == 6);
     assert(save == sp);
 #endif
 
     add_word(&word_decr);
 #if DEBUG
-    interpret("5 1-");
+    interpret("5 1- ");
     assert(pop() == 4);
     assert(save == sp);
 #endif
 
     add_word(&word_incr8);
 #if DEBUG
-    interpret("5 8+");
+    interpret("5 8+ ");
     assert(pop() == 13);
     assert(save == sp);
 #endif
 
     add_word(&word_decr8);
 #if DEBUG
-    interpret("5 8-");
+    interpret("5 8- ");
     assert(pop() == -3);
     assert(save == sp);
 #endif
 
     add_word(&word_add);
 #if DEBUG
-    interpret("11 22 +");
+    interpret("11 22 + ");
     assert(pop() == 33);
     assert(save == sp);
 
-    interpret("5 -8 +");
+    interpret("5 -8 + ");
     assert(pop() == -3);
     assert(save == sp);
 #endif
 
     add_word(&word_sub);
 #if DEBUG
-    interpret("11 22 -");
+    interpret("11 22 - ");
     assert(pop() == -11);
     assert(save == sp);
 
-    interpret("5 -8 -");
+    interpret("5 -8 - ");
     assert(pop() == 13);
     assert(save == sp);
 #endif
 
     add_word(&word_mul);
 #if DEBUG
-    interpret("11 22 *");
+    interpret("11 22 * ");
     assert(pop() == 242);
     assert(save == sp);
 
-    interpret("5 -8 *");
+    interpret("5 -8 * ");
     assert(pop() == -40);
     assert(save == sp);
 #endif
 
     add_word(&word_div);
 #if DEBUG
-    interpret("20 5 /");
+    interpret("20 5 / ");
     assert(pop() == 4);
     assert(save == sp);
 
-    interpret("21 5 /");
+    interpret("21 5 / ");
     assert(pop() == 4);
     assert(save == sp);
 #endif
 
     add_word(&word_mod);
 #if DEBUG
-    interpret("20 5 %");
+    interpret("20 5 % ");
     assert(pop() == 0);
     assert(save == sp);
 
-    interpret("21 5 %");
+    interpret("21 5 % ");
     assert(pop() == 1);
     assert(save == sp);
 
@@ -943,12 +1080,12 @@ int main(void)
 
     add_word(&word_divmod);
 #if DEBUG
-    interpret("20 5 /MOD");
+    interpret("20 5 /MOD ");
     assert(pop() == 4);
     assert(pop() == 0);
     assert(save == sp);
 
-    interpret("21 5 /MOD");
+    interpret("21 5 /MOD ");
     assert(pop() == 4);
     assert(pop() == 1);
     assert(save == sp);
@@ -958,208 +1095,208 @@ int main(void)
 
     add_word(&word_equ);
 #if DEBUG
-    interpret("5 5 =");
+    interpret("5 5 = ");
     assert(pop() == 1);
     assert(save == sp);
 
-    interpret("5 6 =");
+    interpret("5 6 = ");
     assert(pop() == 0);
     assert(save == sp);
 
-    interpret("6 5 =");
+    interpret("6 5 = ");
     assert(pop() == 0);
     assert(save == sp);
 #endif
 
     add_word(&word_nequ);
 #if DEBUG
-    interpret("5 5 <>");
+    interpret("5 5 <> ");
     assert(pop() == 0);
     assert(save == sp);
 
-    interpret("5 6 <>");
+    interpret("5 6 <> ");
     assert(pop() == 1);
     assert(save == sp);
 
-    interpret("6 5 <>");
+    interpret("6 5 <> ");
     assert(pop() == 1);
     assert(save == sp);
 #endif
 
     add_word(&word_lt);
 #if DEBUG
-    interpret("5 5 <");
+    interpret("5 5 < ");
     assert(pop() == 0);
     assert(save == sp);
 
-    interpret("5 6 <");
+    interpret("5 6 < ");
     assert(pop() == 1);
     assert(save == sp);
 
-    interpret("6 5 <");
+    interpret("6 5 < ");
     assert(pop() == 0);
     assert(save == sp);
 #endif
 
     add_word(&word_gt);
 #if DEBUG
-    interpret("5 5 >");
+    interpret("5 5 > ");
     assert(pop() == 0);
     assert(save == sp);
 
-    interpret("5 6 >");
+    interpret("5 6 > ");
     assert(pop() == 0);
     assert(save == sp);
 
-    interpret("6 5 >");
+    interpret("6 5 > ");
     assert(pop() == 1);
     assert(save == sp);
 #endif
 
     add_word(&word_le);
 #if DEBUG
-    interpret("5 5 <=");
+    interpret("5 5 <= ");
     assert(pop() == 1);
     assert(save == sp);
 
-    interpret("5 6 <=");
+    interpret("5 6 <= ");
     assert(pop() == 1);
     assert(save == sp);
 
-    interpret("6 5 <=");
+    interpret("6 5 <= ");
     assert(pop() == 0);
     assert(save == sp);
 #endif
 
     add_word(&word_ge);
 #if DEBUG
-    interpret("5 5 >=");
+    interpret("5 5 >= ");
     assert(pop() == 1);
     assert(save == sp);
 
-    interpret("5 6 >=");
+    interpret("5 6 >= ");
     assert(pop() == 0);
     assert(save == sp);
 
-    interpret("6 5 >=");
+    interpret("6 5 >= ");
     assert(pop() == 1);
     assert(save == sp);
 #endif
 
     add_word(&word_zequ);
 #if DEBUG
-    interpret("0 0=");
+    interpret("0 0= ");
     assert(pop() == 1);
     assert(save == sp);
 
-    interpret("-5 0=");
+    interpret("-5 0= ");
     assert(pop() == 0);
     assert(save == sp);
 
-    interpret("5 0=");
+    interpret("5 0= ");
     assert(pop() == 0);
     assert(save == sp);
 #endif
 
     add_word(&word_znequ);
 #if DEBUG
-    interpret("0 0<>");
+    interpret("0 0<> ");
     assert(pop() == 0);
     assert(save == sp);
 
-    interpret("-5 0<>");
+    interpret("-5 0<> ");
     assert(pop() == 1);
     assert(save == sp);
     
-    interpret("5 0<>");
+    interpret("5 0<> ");
     assert(pop() == 1);
     assert(save == sp);
 #endif
 
     add_word(&word_zlt);
 #if DEBUG
-    interpret("0 0<");
+    interpret("0 0< ");
     assert(pop() == 0);
     assert(save == sp);
 
-    interpret("-5 0<");
+    interpret("-5 0< ");
     assert(pop() == 1);
     assert(save == sp);
 
-    interpret("5 0<");
+    interpret("5 0< ");
     assert(pop() == 0);
     assert(save == sp);
 #endif
 
     add_word(&word_zgt);
 #if DEBUG
-    interpret("0 0>");
+    interpret("0 0> ");
     assert(pop() == 0);
     assert(save == sp);
 
-    interpret("-5 0>");
+    interpret("-5 0> ");
     assert(pop() == 0);
     assert(save == sp);
 
-    interpret("5 0>");
+    interpret("5 0> ");
     assert(pop() == 1);
     assert(save == sp);
 #endif
 
     add_word(&word_zle);
 #if DEBUG
-    interpret("0 0<=");
+    interpret("0 0<= ");
     assert(pop() == 1);
     assert(save == sp);
 
-    interpret("-5 0<=");
+    interpret("-5 0<= ");
     assert(pop() == 1);
     assert(save == sp);
 
-    interpret("5 0<=");
+    interpret("5 0<= ");
     assert(pop() == 0);
     assert(save == sp);
 #endif
 
     add_word(&word_zge);
 #if DEBUG
-    interpret("0 0>=");
+    interpret("0 0>= ");
     assert(pop() == 1);
     assert(save == sp);
 
-    interpret("-5 0>=");
+    interpret("-5 0>= ");
     assert(pop() == 0);
     assert(save == sp);
 
-    interpret("5 0>=");
+    interpret("5 0>= ");
     assert(pop() == 1);
     assert(save == sp);
 #endif
 
     add_word(&word_and);
 #if DEBUG
-    interpret("4 6 AND");
+    interpret("4 6 AND ");
     assert(pop() == 4);
     assert(save == sp);
 #endif
 
     add_word(&word_or);
 #if DEBUG
-    interpret("4 6 OR");
+    interpret("4 6 OR ");
     assert(pop() == 6);
     assert(save == sp);
 #endif
 
     add_word(&word_xor);
 #if DEBUG
-    interpret("4 6 XOR");
+    interpret("4 6 XOR ");
     assert(pop() == 2);
     assert(save == sp);
 #endif
 
     add_word(&word_invert);
 #if DEBUG
-    interpret("99 INVERT");
+    interpret("99 INVERT ");
     assert(pop() == -100);
     assert(save == sp);    
 #endif
@@ -1169,7 +1306,7 @@ int main(void)
     Cell testbuff1[1] = {0};
     push(1000);
     push((Cell)testbuff1);
-    interpret("!");
+    interpret("! ");
     assert(testbuff1[0] == 1000);
     assert(save == sp);
 #endif
@@ -1177,7 +1314,7 @@ int main(void)
     add_word(&word_fetch);
 #if DEBUG
     push((Cell)testbuff1);
-    interpret("@");
+    interpret("@ ");
     assert(pop() == 1000);
     assert(save == sp);
 #endif
@@ -1186,7 +1323,7 @@ int main(void)
 #if DEBUG
     push(1);
     push((Cell)testbuff1);
-    interpret("+!");
+    interpret("+! ");
     assert(testbuff1[0] == 1001);
     assert(save == sp);
 #endif
@@ -1195,7 +1332,7 @@ int main(void)
 #if DEBUG
     push(2);
     push((Cell)testbuff1);
-    interpret("-!");
+    interpret("-! ");
     assert(testbuff1[0] == 999);
     assert(save == sp);
 #endif
@@ -1206,7 +1343,7 @@ int main(void)
     char testbuff3[10] = "ABCDEFGHI";
     push('x');
     push((Cell)testbuff2);
-    interpret("C!");
+    interpret("C! ");
     assert(testbuff2[0] == 'x');
     assert(testbuff2[1] == 'b');
     assert(save == sp);
@@ -1215,7 +1352,7 @@ int main(void)
     add_word(&word_fetchbyte);
 #if DEBUG
     push((Cell)testbuff2);
-    interpret("C@");
+    interpret("C@ ");
     assert(pop() == 'x');
     assert(save == sp);
 #endif
@@ -1228,12 +1365,12 @@ int main(void)
     assert(testbuff2[1] == 'b');
     assert(testbuff3[0] == 'A');
     assert(testbuff3[1] == 'B');
-    interpret("C@C!");
+    interpret("C@C! ");
     assert(testbuff2[0] == 'A');
     assert(testbuff2[1] == 'b');
     assert(testbuff3[0] == 'A');
     assert(testbuff3[1] == 'B');
-    interpret("C@C!");
+    interpret("C@C! ");
     assert(testbuff2[0] == 'A');
     assert(testbuff2[1] == 'B');
     assert(testbuff2[2] == 'c');
@@ -1250,7 +1387,7 @@ int main(void)
     push((Cell)testbuff3); // src
     push((Cell)testbuff2); // dst
     push(5); // length
-    interpret("CMOVE");
+    interpret("CMOVE ");
     assert(strcmp("ABCDEfghi",testbuff2) == 0);
     assert(save == sp);
 #endif
@@ -1262,17 +1399,17 @@ int main(void)
     add_word(&word_testlit);
 #if DEBUG
     // test docolon/exit
-    interpret("42 double");
+    interpret("42 double ");
     assert(pop() == 84);
     assert(save == sp);
 
     // test nested docolon/exit
-    interpret("9 quadruple");
+    interpret("9 quadruple ");
     assert(pop() == 36);
     assert(save == sp);
 
     // test LIT
-    interpret("testlit");
+    interpret("testlit ");
     assert(pop() == 42);
     assert(save == sp);
 #endif
@@ -1283,19 +1420,19 @@ int main(void)
     add_word(&word_var_s0);
     add_word(&word_var_base);
 #if DEBUG
-    interpret("state @");
+    interpret("state @ ");
     assert(pop() == 0);
     assert(save == sp);
-    interpret("latest @");
+    interpret("latest @ ");
     assert(pop() == (Cell)latest);
     assert(save == sp);
-    interpret("here @");
+    interpret("here @ ");
     assert(pop() == (Cell)dictionary);
     assert(save == sp);
-    interpret("s0 @");
+    interpret("s0 @ ");
     assert(pop() == (Cell)s0);
     assert(save == s0); // note: also checking if save and s0 are the same
-    interpret("base @");
+    interpret("base @ ");
     assert(pop() == 10);
     assert(save == sp);
 #endif
@@ -1306,7 +1443,7 @@ int main(void)
     add_word(&word_do_con_f_immed);
     add_word(&word_do_con_f_hidden);
 #if DEBUG
-    interpret("VERSION R0 DOCOL F_IMMED F_HIDDEN");
+    interpret("VERSION R0 DOCOL F_IMMED F_HIDDEN ");
     assert(pop() == 2);
     assert(pop() == 1);
     assert(pop() == (Cell)docol);
@@ -1322,16 +1459,16 @@ int main(void)
     add_word(&word_rdrop);
 #if DEBUG
     Cell *save_rp = rp;
-    interpret("7 >R R>");
+    interpret("7 >R R> ");
     assert(pop() == 7);
     assert(save == sp);
     assert(save_rp == rp);
     assert(save_rp == r0);
-    interpret("8 >R RDROP");
+    interpret("8 >R RDROP ");
     assert(save == sp);
     assert(save_rp == rp);
     assert(save_rp == r0);
-    interpret("RSP@");
+    interpret("RSP@ ");
     assert(pop() == (Cell)rp);
     // not sure how to fully test things here right now
     assert(save == sp);
@@ -1342,7 +1479,7 @@ int main(void)
     add_word(&word_dspfetch);
     add_word(&word_dspstore);
 #if DEBUG
-    interpret("DSP@ 7 OVER 8 OVER 9 OVER DSP!");
+    interpret("DSP@ 7 OVER 8 OVER 9 OVER DSP! ");
     assert(save == sp); // stack pointer should be restored due to DSP@ and DSP!
 #endif
 
@@ -1353,6 +1490,41 @@ int main(void)
 
     add_word(&word_number);
     // TODO add automated testing after interpret etc is converted to use WORD/KEY/NUMBER
+
+    // compiling words
+    add_word(&word_find);
+    add_word(&word_tcfa);
+#if DEBUG
+    char *test_plus = "+";
+    push((Cell)test_plus);
+    push(1);
+    interpret("find >cfa ");
+    assert(*((CodeFn) pop()) == do_add);
+    assert(save == sp);
+#endif
+
+    add_word(&word_tdfa);
+#if DEBUG
+    char *test_double = "double";
+    push((Cell)test_double);
+    push(6);
+    interpret("find ");
+    interpret(">dfa ");
+    void *test_params = (void *)pop();
+    assert(test_params == double_body);
+    assert(save == sp);
+#endif
+
+    add_word(&word_create);
+    add_word(&word_comma);
+    add_word(&word_lbrac);
+    add_word(&word_rbrac);
+    add_word(&word_immediate);
+    add_word(&word_hidden);
+    add_word(&word_hide);
+    add_word(&word_colon);
+    add_word(&word_semicolon);
+    // TODO add automated tests
 
     char line[256];
 
@@ -1365,7 +1537,16 @@ int main(void)
     return 0;
 }
 
-// TODO add flags:
-	// .set F_IMMED,0x80
-	// .set F_HIDDEN,0x20
-	// .set F_LENMASK,0x1f	// length mask
+
+// problem... if we use interpret to interpret one line
+// then it will do fgets to get more input
+// but we don't want to do it in that case
+// so maybe we need to have a variable (ready_for_input)
+// it won't get more input as long as that's not set yet
+// it will know to just... return when in the input is complete
+
+// so... how do we know when the input is complete?
+// when currkey >= bufftop 
+// but then... what do we do in that case?
+
+// one option would be to turn off debugging :(

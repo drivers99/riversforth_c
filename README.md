@@ -106,19 +106,19 @@ Checklist of words to be implemented.
 
 ### Dictionary, compiling primitives
 
-- [ ] FIND
-- [ ] >CFA
-- [ ] >DFA (compound word)
-- [ ] CREATE
-- [ ] ,
-- [ ] [
-- [ ] ]
-- [ ] : (compound word)
-- [ ] ; (compound word)
-- [ ] IMMEDIATE
-- [ ] HIDDEN
-- [ ] HIDE (compound word)
-- [ ] `
+- [x] FIND
+- [x] >CFA
+- [x] >DFA (compound word)
+- [x] CREATE
+- [x] ,
+- [x] [
+- [x] ]
+- [x] IMMEDIATE
+- [x] HIDDEN
+- [x] HIDE (compound word)
+- [x] : (compound word)
+- [x] ; (compound word)
+- [ ] '
 
 ### Branching
 
