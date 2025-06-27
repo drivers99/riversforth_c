@@ -749,7 +749,7 @@ Word word_find      = { NULL, 0,       "FIND",      do_find,      NULL };
 Word word_tcfa      = { NULL, 0,       ">CFA",      do_tcfa,      NULL };
 Word word_tdfa      = { NULL, 0,       ">DFA",      do_tdfa,      NULL };
 Word word_create    = { NULL, 0,       "CREATE",    do_create,    NULL };
-Word word_comma     = { NULL, 0,       "COMMA",     do_comma,     NULL };
+Word word_comma     = { NULL, 0,       ",",         do_comma,     NULL };
 Word word_lbrac     = { NULL, F_IMMED, "[",         do_lbrac,     NULL };
 Word word_rbrac     = { NULL, 0,       "]",         do_rbrac,     NULL };
 Word word_immediate = { NULL, F_IMMED, "IMMEDIATE", do_immediate, NULL };
@@ -786,6 +786,23 @@ void do_tick(void) {
 
 Word word_tick = { NULL, 0, "'", do_tick, NULL };
 
+void do_branch(void) {
+    // unconditional branch
+    ip += *ip; // take the next word (which is pointed to by ip) and add it as an offset to the current ip
+}
+
+void do_zbranch(void) {
+    // conditional branch, only branches if top of the stack is 0
+    if (pop() == 0) {
+        ip += *ip;
+    } else {
+        ip++; // don't branch, skip stored offset
+    }
+}
+
+Word word_branch  = { NULL, 0, "BRANCH",  do_branch,  NULL };
+Word word_zbranch = { NULL, 0, "0BRANCH", do_zbranch, NULL };
+
 // Note: built in words don't live in the actual dictionary / user data space
 void add_word(Word *w) {
     w->link = latest;
@@ -802,6 +819,7 @@ void run(Word *start) {
     while (ip != NULL) {
         current_word = (Word *)*ip;
         ip++;
+        printf("[%s]",current_word->name);
         current_word->code();
     }
 }
@@ -1533,6 +1551,9 @@ int main(void)
     add_word(&word_semicolon);
     add_word(&word_tick);
     // TODO add automated tests
+
+    add_word(&word_branch);
+    add_word(&word_zbranch);
 
     char line[256];
 

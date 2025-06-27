@@ -122,8 +122,8 @@ Checklist of words to be implemented.
 
 ### Branching
 
-- [ ] BRANCH
-- [ ] 0BRANCH
+- [x] BRANCH
+- [x] 0BRANCH
 
 ### Literal strings
 
