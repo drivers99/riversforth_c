@@ -819,7 +819,6 @@ void run(Word *start) {
     while (ip != NULL) {
         current_word = (Word *)*ip;
         ip++;
-        printf("[%s]",current_word->name);
         current_word->code();
     }
 }
