@@ -118,7 +118,7 @@ Checklist of words to be implemented.
 - [x] HIDE (compound word)
 - [x] : (compound word)
 - [x] ; (compound word)
-- [ ] '
+- [x] '
 
 ### Branching
 

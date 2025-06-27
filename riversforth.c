@@ -774,10 +774,17 @@ Word *semicolon_body[] = {
     &word_exit // Return from the function.
 };
 Word word_semicolon = { NULL, F_IMMED, ";", docol, semicolon_body };
-// !!!! TODO semicolon should have set the params...
-// I guess params should just automatically point to where the params will go
-// but then we probably don't need a pointer at all then
-// create should set it then
+
+void do_tick(void) {
+    // '
+    // only works in compiled code. All it does in this version is
+    // take the next Cell (i.e. Word *, at least in my version because
+    // run() works that way) in the params and put it on the stack,
+    // skipping execution of it, following JonesForth example.
+    push(*ip++); // same thing as LIT, here and in JonesForth
+}
+
+Word word_tick = { NULL, 0, "'", do_tick, NULL };
 
 // Note: built in words don't live in the actual dictionary / user data space
 void add_word(Word *w) {
@@ -1524,6 +1531,7 @@ int main(void)
     add_word(&word_hide);
     add_word(&word_colon);
     add_word(&word_semicolon);
+    add_word(&word_tick);
     // TODO add automated tests
 
     char line[256];
