@@ -803,6 +803,14 @@ void do_zbranch(void) {
 Word word_branch  = { NULL, 0, "BRANCH",  do_branch,  NULL };
 Word word_zbranch = { NULL, 0, "0BRANCH", do_zbranch, NULL };
 
+void do_tell(void) {
+    int length = pop(); // TODO look for any instances of int and make sure they are 64 bits
+    char *s = (char *)pop();
+    fwrite(s, sizeof(char), length, stdout);
+}
+
+Word word_tell = { NULL, 0, "TELL", do_tell, NULL };
+
 // Note: built in words don't live in the actual dictionary / user data space
 void add_word(Word *w) {
     w->link = latest;
@@ -1553,6 +1561,8 @@ int main(void)
 
     add_word(&word_branch);
     add_word(&word_zbranch);
+
+    add_word(&word_tell);
 
     char line[256];
 
