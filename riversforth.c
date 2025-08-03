@@ -43,8 +43,25 @@ Cell *rp = return_stack + RETURN_STACK_SIZE; // I'm thinking return_stack is als
 
 Cell *ip = NULL; // address of next "instruction"
 
-void push(Cell x) { *--sp = x; } // TODO add bounds checking
-Cell pop(void) { return *sp++; } // TODO add bounds checking
+// Forward declarations
+void interpret(char *s);
+void do_interpret(void);
+
+void push(Cell x) { 
+    if (sp <= data_stack) {
+        fprintf(stderr, "Error: Data stack overflow\n");
+        exit(1);
+    }
+    *--sp = x; 
+}
+
+Cell pop(void) { 
+    if (sp >= data_stack + DATA_STACK_SIZE) {
+        fprintf(stderr, "Error: Data stack underflow\n");
+        exit(1);
+    }
+    return *sp++; 
+}
 
 // TODO distinguish dictionary and user data space, this is actually user data space
 char dictionary[DICTIONARY_SIZE];
@@ -53,6 +70,7 @@ Word *current_word = NULL;
 
 void do_dot(void) {
     printf("%ld ", pop());
+    fflush(stdout);
 }
 
 void do_exit(void) {
@@ -185,19 +203,39 @@ void do_mul(void) {
 
 void do_div(void) {
     Cell a = pop();
-    sp[0] /= a;
+    Cell b = pop();
+    // Implement floored division for Forth standard compliance
+    Cell q = b / a;
+    Cell r = b % a;
+    if (r != 0 && ((b < 0) != (a < 0))) {
+        q--;
+    }
+    push(q);
 }
 
 void do_mod(void) {
     Cell a = pop();
-    sp[0] %= a;
+    Cell b = pop();
+    // Implement floored division for Forth standard compliance
+    Cell r = b % a;
+    if (r != 0 && ((b < 0) != (a < 0))) {
+        r += a;
+    }
+    push(r);
 }
 
 void do_divmod(void) {
     Cell a = pop();
     Cell b = pop();
-    push(b % a); // push remainder
-    push(b / a); // push quotient
+    // Implement floored division for Forth standard compliance
+    Cell q = b / a;
+    Cell r = b % a;
+    if (r != 0 && ((b < 0) != (a < 0))) {
+        q--;
+        r += a;
+    }
+    push(r); // push remainder
+    push(q); // push quotient
 }
 
 // TODO determine if we want to change value of False for Forth standards compliance
@@ -513,6 +551,10 @@ Word word_do_con_f_hidden = { NULL, 0, "F_HIDDEN", do_con_f_hidden, NULL };
 
 void do_tor(void) {
     // >R
+    if (rp <= return_stack) {
+        fprintf(stderr, "Error: Return stack overflow\n");
+        exit(1);
+    }
     Cell a = pop();
     --rp;
     *rp = a;
@@ -520,6 +562,10 @@ void do_tor(void) {
 
 void do_fromr(void) {
     // R>
+    if (rp >= return_stack + RETURN_STACK_SIZE) {
+        fprintf(stderr, "Error: Return stack underflow\n");
+        exit(1);
+    }
     Cell a = rp[0];
     rp++;
     push(a);
@@ -599,17 +645,17 @@ void do_word(void) {
         while (c != '\n') {
             c = get_key();
         }
-    }
-    // skip whitespace
-    // JonesForth only checks for space ' ' so I'm not sure how it's handling newlines
-    // it only seems to deal with it after comments
-    // but that's clearly not the case.
-    // Perhaps it will become clear later.
-    while (isspace(c)) {
         c = get_key();
     }
-    while (!isspace(c)) {
-        word_buffer[length++] = c;
+    // skip whitespace
+    while (c == ' ' || c == '\t' || c == '\n' || c == '\r') {
+        c = get_key();
+    }
+    // read word
+    while (c != ' ' && c != '\t' && c != '\n' && c != '\r' && c != '\0') {
+        if (length < TOKEN_SIZE - 1) {
+            word_buffer[length++] = c;
+        }
         c = get_key();
     }
     word_buffer[length] = '\0';
@@ -803,6 +849,36 @@ void do_zbranch(void) {
 Word word_branch  = { NULL, 0, "BRANCH",  do_branch,  NULL };
 Word word_zbranch = { NULL, 0, "0BRANCH", do_zbranch, NULL };
 
+void do_litstring(void) {
+    // LITSTRING - pushes the address and length of a string literal
+    // This is a primitive that should be used during compilation
+    // The string follows the LITSTRING instruction in memory
+    Cell length = *ip++;
+    Cell addr = (Cell)ip;
+    push(addr);
+    push(length);
+    ip = (Cell *)((char *)ip + length);
+}
+
+Word word_litstring = { NULL, 0, "LITSTRING", do_litstring, NULL };
+
+void do_char(void) {
+    // CHAR - parses the next word and pushes its first character
+    do_word();
+    char *s = (char *)pop();
+    pop(); // discard length
+    push(s[0]);
+}
+
+void do_execute(void) {
+    // EXECUTE - executes the word whose address is on the stack
+    CodeFn fn = (CodeFn)pop();
+    fn();
+}
+
+Word word_char = { NULL, 0, "CHAR", do_char, NULL };
+Word word_execute = { NULL, 0, "EXECUTE", do_execute, NULL };
+
 void do_tell(void) {
     int length = pop(); // TODO look for any instances of int and make sure they are 64 bits
     char *s = (char *)pop();
@@ -877,6 +953,27 @@ int words_remain(void) {
     }
     return(0);
 }
+
+void do_quit(void) {
+    // QUIT - the main interpreter loop
+    // Reset stacks and enter the main loop
+    sp = s0;
+    rp = r0;
+    while (1) {
+        printf("ok\n");
+        char line[256];
+        if (!fgets(line, sizeof(line), stdin)) break;
+        interpret(line);
+    }
+}
+
+void do_interpret_word(void) {
+    // INTERPRET - interpret one word from input
+    do_interpret();
+}
+
+Word word_quit = { NULL, 0, "QUIT", do_quit, NULL };
+Word word_interpret = { NULL, 0, "INTERPRET", do_interpret_word, NULL };
 
 void do_interpret(void) {
     while (words_remain()) {
@@ -1107,7 +1204,14 @@ int main(void)
     assert(pop() == 1);
     assert(save == sp);
 
-    // TODO how SHOULD this work if either number is negative?
+    // Forth standard uses floored division for negative numbers
+    interpret("-21 5 % ");
+    assert(pop() == 4);
+    assert(save == sp);
+
+    interpret("21 -5 % ");
+    assert(pop() == -4);
+    assert(save == sp);
 #endif
 
     add_word(&word_divmod);
@@ -1122,7 +1226,11 @@ int main(void)
     assert(pop() == 1);
     assert(save == sp);
 
-    // TODO how SHOULD this work if either number is negative?
+    // Forth standard uses floored division for negative numbers
+    interpret("-21 5 /MOD ");
+    assert(pop() == -5);
+    assert(pop() == 4);
+    assert(save == sp);
 #endif
 
     add_word(&word_equ);
@@ -1424,6 +1532,8 @@ int main(void)
     assert(save == sp);
 #endif
 
+    add_word(&word_char);
+    add_word(&word_execute);
 
     add_word(&word_exit);
     add_word(&word_double);
@@ -1561,7 +1671,11 @@ int main(void)
 
     add_word(&word_branch);
     add_word(&word_zbranch);
-
+    add_word(&word_litstring);
+    add_word(&word_char);
+    add_word(&word_execute);
+    add_word(&word_quit);
+    add_word(&word_interpret);
     add_word(&word_tell);
 
     char line[256];
