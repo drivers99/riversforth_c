@@ -803,12 +803,64 @@ void do_zbranch(void) {
 Word word_branch  = { NULL, 0, "BRANCH",  do_branch,  NULL };
 Word word_zbranch = { NULL, 0, "0BRANCH", do_zbranch, NULL };
 
+void do_litstring(void) {
+    // Get the length of the string from the next cell in the instruction stream
+    Cell length = *ip++;
+    
+    // Push the address of the string
+    push((Cell)ip);
+    
+    // Push the length of the string
+    push(length);
+    
+    // Skip past the string in the instruction stream
+    // Round up to the next Cell boundary (similar to jonesforth's 4-byte boundary)
+    ip += (length + sizeof(Cell) - 1) / sizeof(Cell);
+}
+
+void do_char(void) {
+    // Get the next word from input
+    do_word();
+    
+    // Get the string and length from the stack
+    int length = pop();
+    char *s = (char *)pop();
+    
+    // If the word has at least one character, push its ASCII code
+    if (length > 0) {
+        push((Cell)s[0]);
+    } else {
+        // If empty string, push 0
+        push(0);
+    }
+}
+
+void do_execute(void) {
+    // Get the execution token (pointer to a Word) from the stack
+    Word *w = (Word *)pop();
+    
+    // Execute the word
+    if (w) {
+        current_word = w;
+        if (w->code == docol) {
+            // If it's a colon-defined word, run it
+            run(w);
+        } else {
+            // Otherwise, execute its code function directly
+            w->code();
+        }
+    }
+}
+
 void do_tell(void) {
     int length = pop(); // TODO look for any instances of int and make sure they are 64 bits
     char *s = (char *)pop();
     fwrite(s, sizeof(char), length, stdout);
 }
 
+Word word_litstring = { NULL, 0, "LITSTRING", do_litstring, NULL };
+Word word_char = { NULL, 0, "CHAR", do_char, NULL };
+Word word_execute = { NULL, 0, "EXECUTE", do_execute, NULL };
 Word word_tell = { NULL, 0, "TELL", do_tell, NULL };
 
 // Note: built in words don't live in the actual dictionary / user data space
@@ -918,6 +970,56 @@ void do_interpret(void) {
         }
     }
 }
+
+// INTERPRET as a FORTH word
+Word *interpret_body[] = {
+    // Loop while there are words to process
+    // (This is a simplified version - in a full implementation, we would need to handle
+    // the loop condition properly with branching)
+    &word_word,      // Get the next word
+    &word_find,      // Look it up in the dictionary
+    
+    // If found in dictionary (non-zero), process it
+    &word_dup,       // Duplicate the result for testing
+    &word_zbranch,   // If zero (not found), branch to number parsing
+    (Word *)5,       // Offset to number parsing section
+    
+    // Process dictionary word
+    &word_var_state, &word_fetch, // Get STATE
+    &word_zbranch,   // If STATE is 0 (interpreting), execute the word
+    (Word *)6,       // Offset to compilation section
+    
+    // Execute the word
+    &word_execute,   // Execute the word
+    &word_branch,    // Jump back to start
+    (Word *)-11,     // Offset back to start of loop
+    
+    // Compile the word
+    &word_comma,     // Compile the word
+    &word_branch,    // Jump back to start
+    (Word *)-14,     // Offset back to start of loop
+    
+    // Number parsing section
+    // (In a full implementation, we would need to handle number parsing properly)
+    &word_drop,      // Drop the 0 from find
+    &word_exit       // Exit the word
+};
+
+Word word_interpret = { NULL, 0, "INTERPRET", docol, interpret_body };
+
+// QUIT as a FORTH word
+Word *quit_body[] = {
+    // Set up return stack
+    &word_var_s0, &word_fetch, &word_rspstore, // S0 @ RSP! - clear return stack
+    
+    // Main loop
+    &word_interpret,                           // INTERPRET - interpret the next word
+    &word_branch, (Word *)-2,                  // Loop indefinitely
+    
+    &word_exit                                 // This should never be reached
+};
+
+Word word_quit = { NULL, 0, "QUIT", docol, quit_body };
 
 void interpret(char *s) {
     strncpy(input_buffer, s, INPUT_BUFFER_SIZE);
@@ -1562,7 +1664,12 @@ int main(void)
     add_word(&word_branch);
     add_word(&word_zbranch);
 
+    add_word(&word_litstring);
+    add_word(&word_char);
+    add_word(&word_execute);
     add_word(&word_tell);
+    
+    add_word(&word_interpret);
 
     char line[256];
 
