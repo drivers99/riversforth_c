@@ -10,6 +10,34 @@ I'm also planning to refer to other resources such as:
 - Starting Forth
 - Thinking Forth
 
+## Building and Running
+
+```bash
+# Build the interpreter
+make
+
+# Run the interpreter
+./riversforth
+
+# Run tests
+make test
+
+# Clean build artifacts
+make clean
+```
+
+## Usage
+
+Once running, you can enter Forth commands:
+
+```
+ok
+1 2 + .
+3 ok
+42 dup . .
+42 42 ok
+```
+
 ## Are we Forth yet?
 
 Checklist of words to be implemented.
@@ -127,18 +155,18 @@ Checklist of words to be implemented.
 
 ### Literal strings
 
-- [ ] LITSTRING
-- [ ] TELL
+- [x] LITSTRING
+- [x] TELL
 
 ### QUIT/INTERPRET
 
-- [ ] QUIT
-- [ ] INTERPRET
+- [x] QUIT
+- [x] INTERPRET
 
 ### Odds and ends
 
-- [ ] CHAR
-- [ ] EXECUTE
+- [x] CHAR
+- [x] EXECUTE
 - [ ] SYSCALL*
 
 ### Everything in jonesforth.f (which is in FORTH itself)
